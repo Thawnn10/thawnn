@@ -1,0 +1,3234 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Brain - taqanthan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Tùy chỉnh font Inter */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900;900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            user-select: none;
+        }
+        
+        /* MENU STYLES */
+        #mainMenu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            animation: menuFadeIn 0.5s ease-out;
+            overflow-y: auto;
+            padding: 20px 0;
+        }
+
+        .menu-container {
+            max-width: 800px;
+            width: 100%;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        @keyframes menuFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .menu-title {
+            font-size: 4rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            margin-bottom: 1rem;
+            animation: titleBounce 2s ease-in-out infinite;
+            text-align: center;
+        }
+
+        @keyframes titleBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .menu-subtitle {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 2rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+            max-width: 280px;
+        }
+
+        .menu-button {
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: white;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .menu-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .menu-button:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .menu-button:active {
+            transform: translateY(-2px) scale(1.02);
+        }
+
+        .menu-button.secondary {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #764ba2;
+        }
+
+        .menu-button.info {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            color: #764ba2;
+        }
+
+        .menu-button span {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Grade selection buttons */
+        .grade-button {
+            padding: 0.7rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 700;
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .grade-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .grade-button.active {
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            border-color: #22c55e;
+            box-shadow: 0 5px 15px rgba(34, 197, 94, 0.4);
+        }
+
+        /* SETTINGS PANEL */
+        #settingsPanel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-top: 2rem;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: none;
+        }
+
+        .settings-title {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #764ba2;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .setting-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .setting-label {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #4a5568;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .color-option {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .color-option.active {
+            border-color: #764ba2;
+            box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.3);
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .slider-value {
+            min-width: 40px;
+            text-align: center;
+            font-weight: bold;
+            color: #764ba2;
+        }
+
+        input[type="range"] {
+            flex-grow: 1;
+            height: 8px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 10px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid #764ba2;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            margin-top: -8px;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid #764ba2;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        .language-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .lang-button {
+            flex: 1;
+            padding: 0.8rem;
+            font-size: 1rem;
+            font-weight: 700;
+            color: white;
+            background: rgba(118, 75, 162, 0.2);
+            border: 2px solid rgba(118, 75, 162, 0.3);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .lang-button:hover {
+            background: rgba(118, 75, 162, 0.3);
+        }
+
+        .lang-button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #764ba2;
+        }
+
+        .settings-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 2rem;
+        }
+
+        .settings-button {
+            flex: 1;
+            padding: 1rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .settings-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .settings-button.reset {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        /* Floating particles effect */
+        .particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        /* Info Modal */
+        #infoModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+        }
+
+        .info-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: modalSlideIn 0.4s ease-out;
+            color: #333;
+        }
+
+        @keyframes modalSlideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .info-content h2 {
+            color: #764ba2;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .info-content h3 {
+            color: #667eea;
+            font-size: 1.3rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-content p, .info-content ul {
+            color: #4a5568;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+
+        .info-content ul {
+            padding-left: 1.5rem;
+        }
+
+        .info-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .close-button {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 1.5rem;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .close-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            width: 100vw;
+            padding: 0;
+        }
+
+        #gameCanvas {
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            border-radius: 12px;
+            display: block;
+            background-color: #70c5ce;
+            image-rendering: pixelated;
+        }
+
+        /* Hiệu ứng điểm thưởng */
+        .score-plus-effect {
+            position: absolute;
+            font-size: 3rem;
+            color: #4ade80;
+            font-weight: 900;
+            opacity: 0;
+            animation: scorePop 1.5s ease-out forwards;
+            pointer-events: none;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        @keyframes scorePop {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
+        }
+
+        /* Modal cho Câu hỏi */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            padding: 16px; 
+            border-radius: 12px; 
+            width: 95%; 
+            max-width: 260px;
+            max-height: 95vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); 
+            border: 1px solid rgba(255, 255, 255, 0.3); 
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .answer-button {
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            font-size: 0.9rem;
+            border: 1px solid transparent;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: left;
+            white-space: normal;
+            word-wrap: break-word;
+            line-height: 1.4;
+        }
+        .answer-button:hover {
+            transform: scale(1.02); 
+            box-shadow: 0 4px 8px rgba(67, 56, 202, 0.3); 
+        }
+        .answer-button.disabled {
+            background-color: #e5e7eb;
+            color: #9ca3af;
+            cursor: not-allowed;
+            text-decoration: line-through;
+            opacity: 0.7;
+            box-shadow: none;
+        }
+        
+        #jumpButton {
+            width: 56px;
+            height: 56px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #menuButtonInGame {
+            width: 56px;
+            height: 56px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Win Modal */
+        #winModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 4000;
+        }
+
+        .win-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
+            border-radius: 20px;
+            max-width: 350px;
+            width: 85%;
+            text-align: center;
+            color: white;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            animation: winSlideIn 0.6s ease-out;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+        }
+
+        @keyframes winSlideIn {
+            from { transform: translateY(-80px) scale(0.9); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        .win-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            color: #FFD700;
+            text-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .win-message {
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.5;
+        }
+
+        .win-stats {
+            background: rgba(255, 255, 255, 0.12);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .win-button {
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            color: white;
+            border: none;
+            padding: 0.9rem 1.2rem;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 0.7rem;
+            font-size: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .win-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4);
+        }
+
+        .win-button.secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.6rem;
+            font-size: 1rem;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: #FFD700;
+        }
+
+        /* Pause overlay */
+        .pause-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            border-radius: 12px;
+            gap: 20px;
+        }
+
+        .pause-text {
+            color: white;
+            font-size: 3rem;
+            font-weight: 900;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .pause-button {
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            min-width: 200px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+        }
+
+        /* Confetti effect */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 20px;
+            opacity: 0;
+            animation: confettiFall 2s ease-out forwards;
+        }
+
+        @keyframes confettiFall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(500px) rotate(360deg); opacity: 0; }
+        }
+
+        /* SCROLLABLE AREA */
+        .scrollable-content {
+            width: 100%;
+            max-height: 60vh;
+            overflow-y: auto;
+            padding-right: 10px;
+            margin-top: 1rem;
+        }
+
+        .scrollable-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scrollable-content::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .scrollable-content::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+        }
+
+        /* Auth styles - ĐÃ SỬA ĐỂ TỐI MÀU */
+        .auth-form {
+            animation: fadeIn 0.3s ease-out;
+            background: rgba(30, 30, 40, 0.95); /* Nền tối */
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .tab-button {
+            transition: all 0.3s ease;
+            color: #ffffff; /* Chữ trắng */
+        }
+
+        .tab-button.active {
+            color: #8b5cf6;
+            border-bottom-color: #8b5cf6;
+        }
+
+        .tab-button:not(.active):hover {
+            color: #cbd5e1; /* Màu sáng hơn khi hover */
+        }
+
+        .user-dropdown-enter {
+            animation: dropdownFadeIn 0.2s ease-out;
+        }
+
+        @keyframes dropdownFadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Progress bar for stats */
+        .progress-bar {
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            background-color: #e5e7eb;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+        }
+
+        /* Tài khoản trên menu - THÊM MỚI */
+        .user-account-menu {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 2500;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .menu-title {
+                font-size: 3rem;
+            }
+            
+            .color-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .settings-title {
+                font-size: 1.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .menu-title {
+                font-size: 2.5rem;
+            }
+            
+            .menu-subtitle {
+                font-size: 1rem;
+            }
+            
+            .menu-button {
+                padding: 0.8rem 1.5rem;
+                font-size: 1rem;
+            }
+            
+            .color-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-800 text-white">
+
+    <!-- AUTH MODALS -->
+    <!-- LOGIN/REGISTER MODAL -->
+    <div id="authModal" class="modal" style="display: flex;">
+        <div class="modal-content" style="max-width: 400px; background: rgba(30, 30, 40, 0.95); border: 2px solid rgba(255, 255, 255, 0.1);">
+            <div id="authTabs" class="flex mb-4 border-b border-gray-600">
+                <button id="loginTab" class="tab-button active flex-1 py-2 font-bold text-purple-400 border-b-2 border-purple-400" onclick="switchAuthTab('login')">
+                    <span id="loginTabText">ĐĂNG NHẬP</span>
+                </button>
+                <button id="registerTab" class="tab-button flex-1 py-2 font-bold text-gray-300" onclick="switchAuthTab('register')">
+                    <span id="registerTabText">ĐĂNG KÝ</span>
+                </button>
+            </div>
+
+            <!-- Login Form -->
+            <div id="loginForm" class="auth-form">
+                <div class="mb-4">
+                    <label class="block text-gray-200 text-sm font-bold mb-2" for="loginUsername" id="loginUsernameLabel">
+                        Tên đăng nhập:
+                    </label>
+                    <input type="text" id="loginUsername" class="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 bg-gray-800 text-white" placeholder="Nhập tên đăng nhập">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-200 text-sm font-bold mb-2" for="loginPassword" id="loginPasswordLabel">
+                        Mật khẩu:
+                    </label>
+                    <input type="password" id="loginPassword" class="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 bg-gray-800 text-white" placeholder="Nhập mật khẩu">
+                </div>
+                <div id="loginMessage" class="mb-4 text-sm text-center"></div>
+                <button onclick="handleLogin()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200" id="loginButton">
+                    ĐĂNG NHẬP
+                </button>
+                <p class="text-center text-sm text-gray-300 mt-4" id="switchToRegisterText">
+                    Chưa có tài khoản? <a href="javascript:void(0)" onclick="switchAuthTab('register')" class="text-purple-400 font-bold">Đăng ký ngay</a>
+                </p>
+            </div>
+
+            <!-- Register Form -->
+            <div id="registerForm" class="auth-form" style="display: none;">
+                <div class="mb-4">
+                    <label class="block text-gray-200 text-sm font-bold mb-2" for="registerUsername" id="registerUsernameLabel">
+                        Tên đăng nhập*:
+                    </label>
+                    <input type="text" id="registerUsername" class="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 bg-gray-800 text-white" placeholder="Từ 3-20 ký tự">
+                    <p class="text-xs text-gray-400 mt-1" id="usernameHelpText">Mỗi tên đăng nhập chỉ được dùng một lần</p>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-200 text-sm font-bold mb-2" for="registerPassword" id="registerPasswordLabel">
+                        Mật khẩu*:
+                    </label>
+                    <input type="password" id="registerPassword" class="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 bg-gray-800 text-white" placeholder="Ít nhất 6 ký tự">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-200 text-sm font-bold mb-2" for="confirmPassword" id="confirmPasswordLabel">
+                        Xác nhận mật khẩu*:
+                    </label>
+                    <input type="password" id="confirmPassword" class="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 bg-gray-800 text-white" placeholder="Nhập lại mật khẩu">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-200 text-sm font-bold mb-2" for="birthDate" id="birthDateLabel">
+                        Ngày sinh*:
+                    </label>
+                    <input type="date" id="birthDate" class="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 bg-gray-800 text-white">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-200 text-sm font-bold mb-2" id="genderLabel">
+                        Giới tính*:
+                    </label>
+                    <div class="flex space-x-4">
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="gender" value="male" class="text-purple-600 focus:ring-purple-500">
+                            <span class="ml-2 text-white" id="genderMaleText">Nam</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="gender" value="female" class="text-purple-600 focus:ring-purple-500">
+                            <span class="ml-2 text-white" id="genderFemaleText">Nữ</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="gender" value="other" class="text-purple-600 focus:ring-purple-500">
+                            <span class="ml-2 text-white" id="genderOtherText">Khác</span>
+                        </label>
+                    </div>
+                </div>
+                <div id="registerMessage" class="mb-4 text-sm text-center"></div>
+                <button onclick="handleRegister()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200" id="registerButton">
+                    ĐĂNG KÝ TÀI KHOẢN
+                </button>
+                <p class="text-center text-sm text-gray-300 mt-4" id="switchToLoginText">
+                    Đã có tài khoản? <a href="javascript:void(0)" onclick="switchAuthTab('login')" class="text-purple-400 font-bold">Đăng nhập</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- USER PROFILE MENU -->
+    <div id="userMenu" style="display: none;" class="fixed top-4 left-4 z-50">
+        <div class="flex items-center space-x-2">
+            <div class="relative">
+                <button id="userAvatarButton" onclick="toggleUserDropdown()" class="w-10 h-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold shadow-lg hover:shadow-xl transition">
+                    <span id="avatarText">U</span>
+                </button>
+                <div id="userDropdown" class="absolute left-0 mt-2 w-48 bg-gray-900 rounded-lg shadow-xl py-2 hidden border border-gray-700">
+                    <div class="px-4 py-2 border-b border-gray-700">
+                        <p class="font-bold text-white" id="dropdownUsername">Username</p>
+                        <p class="text-xs text-gray-400" id="dropdownStatus">Đang chơi</p>
+                    </div>
+                    <a href="javascript:void(0)" onclick="showProfile()" class="block px-4 py-2 text-gray-300 hover:bg-indigo-900 hover:text-white transition flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        <span id="profileText">Hồ sơ</span>
+                    </a>
+                    <a href="javascript:void(0)" onclick="showStats()" class="block px-4 py-2 text-gray-300 hover:bg-indigo-900 hover:text-white transition flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        <span id="statsText">Thống kê</span>
+                    </a>
+                    <a href="javascript:void(0)" onclick="logout()" class="block px-4 py-2 text-gray-300 hover:bg-red-900 hover:text-white transition flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                        </svg>
+                        <span id="logoutText">Đăng xuất</span>
+                    </a>
+                </div>
+            </div>
+            <div class="text-white">
+                <p class="font-bold text-sm" id="usernameDisplay">Khách</p>
+                <p class="text-xs opacity-75" id="scoreDisplay">Điểm cao: 0</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROFILE MODAL -->
+    <div id="profileModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <h2 class="text-xl font-bold mb-4 text-center text-indigo-700" id="profileTitle">HỒ SƠ NGƯỜI DÙNG</h2>
+            
+            <div class="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 rounded-lg mb-4">
+                <div class="flex items-center mb-4">
+                    <div class="w-16 h-16 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white flex items-center justify-center text-2xl font-bold mr-4 shadow-lg">
+                        <span id="profileAvatar">U</span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg text-gray-800" id="profileUsername">Username</h3>
+                        <p class="text-sm text-gray-600" id="profileJoinDate">Tham gia: 01/01/2024</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div class="bg-white p-3 rounded-lg shadow">
+                        <p class="text-gray-500">Giới tính</p>
+                        <p class="font-bold" id="profileGender">Nam</p>
+                    </div>
+                    <div class="bg-white p-3 rounded-lg shadow">
+                        <p class="text-gray-500">Tuổi</p>
+                        <p class="font-bold" id="profileAge">18</p>
+                    </div>
+                    <div class="bg-white p-3 rounded-lg shadow">
+                        <p class="text-gray-500">Ngày sinh</p>
+                        <p class="font-bold" id="profileBirthDate">01/01/2006</p>
+                    </div>
+                    <div class="bg-white p-3 rounded-lg shadow">
+                        <p class="text-gray-500">Lớp đang chơi</p>
+                        <p class="font-bold" id="profileGrade">10</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <button onclick="closeProfileModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition duration-200">
+                    <span id="closeProfileText">Đóng</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATS MODAL -->
+    <div id="statsModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <h2 class="text-xl font-bold mb-4 text-center text-indigo-700" id="statsTitle">THỐNG KÊ TRÒ CHƠI</h2>
+            
+            <div class="space-y-3">
+                <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                    <span class="text-gray-700" id="totalGamesText">Số lần chơi:</span>
+                    <span class="font-bold text-indigo-600" id="totalGames">0</span>
+                </div>
+                <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                    <span class="text-gray-700" id="bestScoreText">Điểm cao nhất:</span>
+                    <span class="font-bold text-green-600" id="bestScore">0</span>
+                </div>
+                <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                    <span class="text-gray-700" id="totalScoreText">Tổng điểm:</span>
+                    <span class="font-bold text-blue-600" id="totalScore">0</span>
+                </div>
+                <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                    <span class="text-gray-700" id="questionsAnsweredText">Câu hỏi đã trả lời:</span>
+                    <span class="font-bold text-purple-600" id="questionsAnswered">0</span>
+                </div>
+                <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                    <span class="text-gray-700" id="correctAnswersText">Câu trả lời đúng:</span>
+                    <span class="font-bold text-green-600" id="correctAnswers">0</span>
+                </div>
+                <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                    <span class="text-gray-700" id="accuracyText">Tỷ lệ đúng:</span>
+                    <span class="font-bold text-yellow-600" id="accuracy">0%</span>
+                </div>
+            </div>
+            
+            <div class="mt-6 text-center">
+                <button onclick="closeStatsModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition duration-200">
+                    <span id="closeStatsText">Đóng</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TÀI KHOẢN TRÊN MENU CHÍNH - THÊM MỚI -->
+    <div id="userAccountMenu" class="user-account-menu" style="display: none;">
+        <div class="flex items-center space-x-2">
+            <div class="relative">
+                <button id="mainMenuUserAvatar" onclick="toggleMainMenuUserDropdown()" class="w-10 h-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold shadow-lg hover:shadow-xl transition">
+                    <span id="mainMenuAvatarText">U</span>
+                </button>
+                <div id="mainMenuUserDropdown" class="absolute right-0 mt-2 w-48 bg-gray-900 rounded-lg shadow-xl py-2 hidden border border-gray-700">
+                    <div class="px-4 py-2 border-b border-gray-700">
+                        <p class="font-bold text-white" id="mainMenuDropdownUsername">Username</p>
+                        <p class="text-xs text-gray-400" id="mainMenuDropdownStatus">Đang ở menu</p>
+                    </div>
+                    <a href="javascript:void(0)" onclick="showProfile()" class="block px-4 py-2 text-gray-300 hover:bg-indigo-900 hover:text-white transition flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        <span id="mainMenuProfileText">Hồ sơ</span>
+                    </a>
+                    <a href="javascript:void(0)" onclick="showStats()" class="block px-4 py-2 text-gray-300 hover:bg-indigo-900 hover:text-white transition flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        <span id="mainMenuStatsText">Thống kê</span>
+                    </a>
+                    <a href="javascript:void(0)" onclick="logout()" class="block px-4 py-2 text-gray-300 hover:bg-red-900 hover:text-white transition flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                        </svg>
+                        <span id="mainMenuLogoutText">Đăng xuất</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MENU CHÍNH -->
+    <div id="mainMenu" style="display: none;">
+        <!-- Particles decorative -->
+        <div class="particle" style="top: 10%; left: 10%; animation-delay: 0s;"></div>
+        <div class="particle" style="top: 20%; left: 80%; animation-delay: 0.5s;"></div>
+        <div class="particle" style="top: 70%; left: 15%; animation-delay: 1s;"></div>
+        <div class="particle" style="top: 60%; left: 85%; animation-delay: 1.5s;"></div>
+        <div class="particle" style="top: 40%; left: 50%; animation-delay: 0.8s;"></div>
+
+        <div class="menu-container">
+            <h1 class="menu-title">🧠 FLAPPY BRAIN</h1>
+            <p class="menu-subtitle" id="menuSubtitle">Thử thách trí tuệ của bạn!</p>
+            
+            <div class="menu-buttons">
+                <div style="margin-bottom: 1.5rem;">
+                    <p id="gradeLabel" style="color: white; font-weight: 700; margin-bottom: 0.5rem; font-size: 1.1rem;">Chọn lớp học:</p>
+                    <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                        <button class="grade-button active" onclick="selectGrade(10)" id="grade10Btn">
+                            <span id="grade10Text">Lớp 10</span>
+                        </button>
+                        <button class="grade-button" onclick="selectGrade(11)" id="grade11Btn">
+                            <span id="grade11Text">Lớp 11</span>
+                        </button>
+                        <button class="grade-button" onclick="selectGrade(12)" id="grade12Btn">
+                            <span id="grade12Text">Lớp 12</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <button class="menu-button" onclick="startGame()">
+                    <span id="startGameText">▶ BẮT ĐẦU CHƠI</span>
+                </button>
+                <button class="menu-button secondary" onclick="toggleSettings()">
+                    <span id="settingsText">⚙️ CÀI ĐẶT</span>
+                </button>
+                <button class="menu-button info" onclick="showInfo()">
+                    <span id="guideText">📖 HƯỚNG DẪN</span>
+                </button>
+                <button class="menu-button" onclick="showAbout()">
+                    <span id="aboutText">ℹ️ GIỚI THIỆU</span>
+                </button>
+            </div>
+
+            <!-- PANEL CÀI ĐẶT -->
+            <div id="settingsPanel">
+                <h2 class="settings-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8">
+                        <path fill-rule="evenodd" d="M12 6.75a5.25 5.25 0 0 1 6.775-5.025.75.75 0 0 1 .313 1.248l-3.32 3.319c.063.475.276.934.641 1.299.365.365.824.578 1.3.64l3.318-3.319a.75.75 0 0 1 1.248.313 5.25 5.25 0 0 1-5.472 6.756c-1.018-.086-1.87.1-2.309.634L7.344 21.3A3.298 3.298 0 1 1 2.7 16.657l8.684-7.151c.533-.44.72-1.291.634-2.309A5.342 5.342 0 0 1 12 6.75ZM4.117 19.125a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75v-.008Z" clip-rule="evenodd" />
+                    </svg>
+                    <span id="settingsTitle">CÀI ĐẶT TRÒ CHƠI</span>
+                </h2>
+                
+                <div class="scrollable-content">
+                    <!-- MÀU NỀN (ĐÃ VÔ HIỆU HÓA - SẼ DÙNG HÌNH ẢNH) -->
+                    <div class="setting-group" style="display: none;">
+                        <label class="setting-label" id="bgColorLabel">🎨 Màu nền game:</label>
+                        <div class="color-grid">
+                            <div class="color-option active" style="background: linear-gradient(135deg, #70c5ce 0%, #4a90e2 100%);" onclick="selectBgColor(0)"></div>
+                            <div class="color-option" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" onclick="selectBgColor(1)"></div>
+                            <div class="color-option" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);" onclick="selectBgColor(2)"></div>
+                            <div class="color-option" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);" onclick="selectBgColor(3)"></div>
+                            <div class="color-option" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);" onclick="selectBgColor(4)"></div>
+                            <div class="color-option" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);" onclick="selectBgColor(5)"></div>
+                            <div class="color-option" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);" onclick="selectBgColor(6)"></div>
+                            <div class="color-option" style="background: linear-gradient(135deg, #a3bded 0%, #6991c7 100%);" onclick="selectBgColor(7)"></div>
+                        </div>
+                    </div>
+
+                    <!-- MÀU CHIM (ĐÃ VÔ HIỆU HÓA - SẼ DÙNG HÌNH ẢNH) -->
+                    <div class="setting-group" style="display: none;">
+                        <label class="setting-label" id="birdColorLabel">🐦 Màu chim:</label>
+                        <div class="color-grid">
+                            <div class="color-option active" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);" onclick="selectBirdColor(0)"></div>
+                            <div class="color-option" style="background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);" onclick="selectBirdColor(1)"></div>
+                            <div class="color-option" style="background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);" onclick="selectBirdColor(2)"></div>
+                            <div class="color-option" style="background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);" onclick="selectBirdColor(3)"></div>
+                            <div class="color-option" style="background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);" onclick="selectBirdColor(4)"></div>
+                            <div class="color-option" style="background: linear-gradient(135deg, #a6c0fe 0%, #f68084 100%);" onclick="selectBirdColor(5)"></div>
+                            <div class="color-option" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);" onclick="selectBirdColor(6)"></div>
+                            <div class="color-option" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);" onclick="selectBirdColor(7)"></div>
+                        </div>
+                    </div>
+
+                    <!-- TỐC ĐỘ GAME -->
+                    <div class="setting-group">
+                        <label class="setting-label" id="gameSpeedLabel">⚡ Tốc độ game:</label>
+                        <div class="slider-container">
+                            <span id="slowText">Chậm</span>
+                            <input type="range" id="gameSpeedSlider" min="50" max="200" value="100" oninput="updateGameSpeed(this.value)">
+                            <span id="fastText">Nhanh</span>
+                            <span class="slider-value" id="speedValue">100%</span>
+                        </div>
+                    </div>
+
+                    <!-- ÂM THANH -->
+                    <div class="setting-group">
+                        <label class="setting-label" id="soundLabel">🔊 Âm thanh:</label>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span id="soundToggleText">Bật/Tắt âm thanh</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="soundToggle" checked onchange="toggleSound(this.checked)">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- ÂM LƯỢNG -->
+                    <div class="setting-group">
+                        <label class="setting-label" id="volumeLabel">🔈 Âm lượng:</label>
+                        <div class="slider-container">
+                            <span id="lowText">Nhỏ</span>
+                            <input type="range" id="volumeSlider" min="0" max="100" value="80" oninput="updateVolume(this.value)">
+                            <span id="highText">Lớn</span>
+                            <span class="slider-value" id="volumeValue">80%</span>
+                        </div>
+                    </div>
+
+                    <!-- NGÔN NGỮ -->
+                    <div class="setting-group">
+                        <label class="setting-label" id="languageLabel">🌐 Ngôn ngữ:</label>
+                        <div class="language-buttons">
+                            <button class="lang-button active" onclick="selectLanguage('vi')">Tiếng Việt</button>
+                            <button class="lang-button" onclick="selectLanguage('en')">English</button>
+                        </div>
+                    </div>
+
+                    <!-- ĐỘ KHÓ -->
+                    <div class="setting-group">
+                        <label class="setting-label" id="difficultyLabel">🎯 Độ khó:</label>
+                        <div class="language-buttons">
+                            <button class="lang-button active" onclick="selectDifficulty('easy')" id="easyBtn">Dễ</button>
+                            <button class="lang-button" onclick="selectDifficulty('medium')" id="mediumBtn">Trung bình</button>
+                            <button class="lang-button" onclick="selectDifficulty('hard')" id="hardBtn">Khó</button>
+                        </div>
+                    </div>
+
+                    <!-- KIỂM SOÁT -->
+                    <div class="setting-group">
+                        <label class="setting-label" id="controlLabel">🎮 Kiểm soát:</label>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span id="touchControlText">Cho phép cảm ứng</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="touchToggle" checked onchange="toggleTouchControl(this.checked)">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NÚT HÀNH ĐỘNG -->
+                <div class="settings-actions">
+                    <button class="settings-button" onclick="saveSettings()">
+                        <span id="saveText">💾 Lưu cài đặt</span>
+                    </button>
+                    <button class="settings-button reset" onclick="resetSettings()">
+                        <span id="resetText">🔄 Đặt lại</span>
+                    </button>
+                    <button class="settings-button" onclick="toggleSettings()">
+                        <span id="closeText">✕ Đóng</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- INFO MODAL -->
+    <div id="infoModal">
+        <div class="info-content">
+            <h2 id="modalTitle">Hướng dẫn chơi</h2>
+            <div id="modalBody">
+                <!-- Nội dung sẽ được điền bằng JavaScript -->
+            </div>
+            <button class="close-button" onclick="closeModal()" id="closeModalBtn">Đóng</button>
+        </div>
+    </div>
+
+    <!-- WIN MODAL -->
+    <div id="winModal">
+        <div class="win-content">
+            <div class="win-title" id="winTitle">🎉 CHIẾN THẮNG!</div>
+            <div class="win-message" id="winMessage">Hoàn thành tất cả câu hỏi lớp <span id="winGrade">10</span>!</div>
+            
+            <div class="win-stats">
+                <div class="stat-item">
+                    <span id="winScoreLabel">Điểm:</span>
+                    <span class="stat-value" id="winScore">0</span>
+                </div>
+                <div class="stat-item">
+                    <span id="winQuestionsLabel">Câu hỏi:</span>
+                    <span class="stat-value" id="winAnswered">0</span>/<span id="winTotal">0</span>
+                </div>
+                <div class="stat-item">
+                    <span id="winBestLabel">Điểm cao nhất:</span>
+                    <span class="stat-value" id="winBest">0</span>
+                </div>
+            </div>
+
+            <button class="win-button" onclick="returnToMenuFromWin()" id="homeButton">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                    <path d="M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 001.061 1.06l8.69-8.69z" />
+                    <path d="M12 5.432l8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75V21a.75.75 0 01-.75.75H5.625a1.875 1.875 0 01-1.875-1.875v-6.198a2.29 2.29 0 00.091-.086L12 5.43z" />
+                </svg>
+                <span id="homeText">VỀ TRANG CHỦ</span>
+            </button>
+            
+            <button class="win-button secondary" onclick="playAgainFromWin()" id="playAgainButton">
+                <svg xmlns="http://www.w3.org2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                    <path fill-rule="evenodd" d="M4.755 10.059a7.5 7.5 0 0112.548-3.364l1.903 1.903h-3.183a.75.75 0 100 1.5h4.992a.75.75 0 00.75-0.75V4.356a.75.75 0 00-1.5 0v3.18l-1.9-1.9A9 9 0 003.306 9.67a.75.75 0 101.45.388zm15.408 3.352a.75.75 0 00-.919.53 7.5 7.5 0 01-12.548 3.364l-1.902-1.903h3.183a.75.75 0 000-1.5H2.984a.75.75 0 00-.75.75v4.992a.75.75 0 001.5 0v-3.18l1.9 1.9a9 9 0 0015.059-4.035.75.75 0 00-.53-.918z" clip-rule="evenodd" />
+                </svg>
+                <span id="playAgainText">CHƠI LẠI</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- NÚT QUAY VỀ MENU TRONG GAME - THÊM MỚI -->
+    <button id="returnToMenuButton" 
+            style="display: none;"
+            class="fixed top-4 right-20 z-50 p-3 rounded-full bg-gray-700 text-white shadow-xl hover:bg-gray-800 transition transform hover:scale-105 active:scale-95" 
+            onclick="returnToMenuFromGame()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+            <path fill-rule="evenodd" d="M9.53 2.47a.75.75 0 010 1.06L4.81 8.25H15a6.75 6.75 0 010 13.5h-3a.75.75 0 010-1.5h3a5.25 5.25 0 100-10.5H4.81l4.72 4.72a.75.75 0 11-1.06 1.06l-6-6a.75.75 0 010-1.06l6-6a.75.75 0 011.06 0z" clip-rule="evenodd" />
+        </svg>
+    </button>
+
+    <div class="game-container relative">
+        <div id="effect-area" class="absolute w-[288px] h-[512px] pointer-events-none"></div>
+        <canvas id="gameCanvas" width="288" height="512" class="rounded-xl"></canvas>
+    </div>
+
+    <!-- Menu button trong game -->
+    <button id="menuButtonInGame" 
+            style="display: none;"
+            class="fixed top-4 left-4 z-50 p-3 rounded-full bg-purple-600 text-white shadow-xl hover:bg-purple-700 transition transform hover:scale-105 active:scale-95" 
+            onclick="returnToMenu();">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+            <path fill-rule="evenodd" d="M3 6.75A.75.75 0 0 1 3.75 6h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 6.75ZM3 12a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 12Zm0 5.25a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1-.75-.75Z" clip-rule="evenodd" />
+        </svg>
+    </button>
+
+    <!-- Pause button -->
+    <button id="pauseButton" 
+            style="display: none;"
+            class="fixed top-4 right-4 z-50 p-3 rounded-full bg-yellow-500 text-white shadow-xl hover:bg-yellow-600 transition transform hover:scale-105 active:scale-95" 
+            onclick="togglePause();">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+            <path fill-rule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75-.75H9a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H7.5a.75.75 0 0 1-.75-.75V5.25Zm7.5 0A.75.75 0 0 1 15 4.5h1.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H15a.75.75 0 0 1-.75-.75V5.25Z" clip-rule="evenodd" />
+        </svg>
+    </button>
+
+    <button id="jumpButton" 
+            style="display: none;"
+            class="fixed bottom-4 right-4 z-50 p-3 rounded-full bg-indigo-600 text-white shadow-xl hover:bg-indigo-700 transition transform hover:scale-105 active:scale-95" 
+            onclick="if (gameState !== 'question' && !isPaused) handleJump(event);">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+            <path fill-rule="evenodd" d="M11.47 7.72a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 1 1-1.06 1.06L12 9.31l-6.97 6.97a.75.75 0 0 1-1.06-1.06l7.5-7.5Z" clip-rule="evenodd" />
+        </svg>
+    </button>
+
+    <div id="questionModal" class="modal">
+        <div class="modal-content">
+            <h2 id="questionSubject" class="text-base font-extrabold mb-3 text-center text-indigo-700 uppercase border-b-2 pb-1 border-indigo-200"></h2>
+            <p id="questionText" class="text-gray-900 text-sm mb-4 font-semibold p-2 border-l-4 border-indigo-500 bg-indigo-50 rounded-r-lg"></p>
+            <div id="answersContainer" class="space-y-2"></div>
+            <div class="mt-3 flex justify-between items-center border-t pt-2 border-gray-200">
+                <button id="hintButton" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1 px-2 rounded-lg shadow-md transition answer-button flex items-center text-xs" onclick="game.useHint()">
+                    <span id="hintText">Gợi ý</span> (<span id="hintCountText">0</span>)
+                </button>
+                <p id="skipMessage" class="text-xs text-gray-500 text-right">
+                    <span class="text-red-600 font-bold" id="warningText">LƯU Ý:</span> <span id="warningMessage">Sai = Thua!</span>
+                </p>
+            </div>
+            <p id="feedbackMessage" class="mt-2 text-center text-sm font-extrabold"></p>
+        </div>
+    </div>
+    
+    <script>
+        // ========== HỆ THỐNG AUTH ==========
+        class AuthSystem {
+            constructor() {
+                this.currentUser = null;
+                this.users = this.loadUsers();
+                this.isLoggedIn = false;
+            }
+
+            loadUsers() {
+                const usersJSON = localStorage.getItem('flappyBrainUsers');
+                return usersJSON ? JSON.parse(usersJSON) : [];
+            }
+
+            saveUsers() {
+                localStorage.setItem('flappyBrainUsers', JSON.stringify(this.users));
+            }
+
+            usernameExists(username) {
+                return this.users.some(user => user.username.toLowerCase() === username.toLowerCase());
+            }
+
+            register(username, password, birthDate, gender) {
+                if (!username || !password || !birthDate || !gender) {
+                    return { success: false, message: 'Vui lòng điền đầy đủ thông tin' };
+                }
+
+                if (username.length < 3 || username.length > 20) {
+                    return { success: false, message: 'Tên đăng nhập phải từ 3-20 ký tự' };
+                }
+
+                if (this.usernameExists(username)) {
+                    return { success: false, message: 'Tên đăng nhập đã tồn tại' };
+                }
+
+                if (password.length < 6) {
+                    return { success: false, message: 'Mật khẩu phải có ít nhất 6 ký tự' };
+                }
+
+                const birthDateObj = new Date(birthDate);
+                const today = new Date();
+                const age = today.getFullYear() - birthDateObj.getFullYear();
+                
+                if (age < 6) {
+                    return { success: false, message: 'Bạn phải từ 6 tuổi trở lên' };
+                }
+                if (age > 100) {
+                    return { success: false, message: 'Ngày sinh không hợp lệ' };
+                }
+
+                const newUser = {
+                    id: Date.now().toString(),
+                    username: username.trim(),
+                    password: this.hashPassword(password),
+                    birthDate: birthDate,
+                    gender: gender,
+                    createdAt: new Date().toISOString(),
+                    stats: {
+                        gamesPlayed: 0,
+                        bestScore: 0,
+                        totalScore: 0,
+                        questionsAnswered: 0,
+                        correctAnswers: 0,
+                        achievements: []
+                    },
+                    settings: {
+                        volume: 0.8,
+                        soundEnabled: true,
+                        gameSpeed: 1.0,
+                        difficulty: 'easy',
+                        language: 'vi',
+                        birdColor: 0,
+                        bgColor: 0
+                    }
+                };
+
+                this.users.push(newUser);
+                this.saveUsers();
+
+                this.currentUser = newUser;
+                this.isLoggedIn = true;
+                this.saveCurrentUser();
+
+                return { 
+                    success: true, 
+                    message: 'Đăng ký thành công!',
+                    user: newUser 
+                };
+            }
+
+            login(username, password) {
+                const user = this.users.find(u => 
+                    u.username.toLowerCase() === username.toLowerCase()
+                );
+
+                if (!user) {
+                    return { success: false, message: 'Tài khoản không tồn tại' };
+                }
+
+                if (user.password !== this.hashPassword(password)) {
+                    return { success: false, message: 'Mật khẩu không đúng' };
+                }
+
+                this.currentUser = user;
+                this.isLoggedIn = true;
+                this.saveCurrentUser();
+
+                return { 
+                    success: true, 
+                    message: 'Đăng nhập thành công!',
+                    user: user 
+                };
+            }
+
+            logout() {
+                this.currentUser = null;
+                this.isLoggedIn = false;
+                localStorage.removeItem('flappyBrainCurrentUser');
+                return { success: true, message: 'Đã đăng xuất' };
+            }
+
+            saveCurrentUser() {
+                if (this.currentUser) {
+                    localStorage.setItem('flappyBrainCurrentUser', JSON.stringify(this.currentUser));
+                }
+            }
+
+            loadCurrentUser() {
+                const userJSON = localStorage.getItem('flappyBrainCurrentUser');
+                if (userJSON) {
+                    this.currentUser = JSON.parse(userJSON);
+                    this.isLoggedIn = true;
+                    return this.currentUser;
+                }
+                return null;
+            }
+
+            updateStats(stats) {
+                if (!this.currentUser) return;
+                
+                Object.keys(stats).forEach(key => {
+                    if (typeof this.currentUser.stats[key] === 'number') {
+                        this.currentUser.stats[key] += stats[key];
+                    }
+                });
+                
+                this.saveUserData();
+            }
+
+            updateBestScore(score) {
+                if (!this.currentUser) return;
+                
+                if (score > this.currentUser.stats.bestScore) {
+                    this.currentUser.stats.bestScore = score;
+                    this.saveUserData();
+                }
+            }
+
+            updateSettings(newSettings) {
+                if (!this.currentUser) return;
+                
+                Object.assign(this.currentUser.settings, newSettings);
+                this.saveUserData();
+            }
+
+            getUserSettings() {
+                return this.currentUser ? this.currentUser.settings : null;
+            }
+
+            saveUserData() {
+                if (!this.currentUser) return;
+                
+                const index = this.users.findIndex(u => u.id === this.currentUser.id);
+                if (index !== -1) {
+                    this.users[index] = this.currentUser;
+                    this.saveUsers();
+                    this.saveCurrentUser();
+                }
+            }
+
+            hashPassword(password) {
+                let hash = 0;
+                for (let i = 0; i < password.length; i++) {
+                    const char = password.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return hash.toString();
+            }
+
+            getUserInfo() {
+                if (!this.currentUser) return null;
+                
+                const birthDate = new Date(this.currentUser.birthDate);
+                const today = new Date();
+                const age = today.getFullYear() - birthDate.getFullYear();
+                
+                return {
+                    username: this.currentUser.username,
+                    birthDate: this.currentUser.birthDate,
+                    age: age,
+                    gender: this.currentUser.gender,
+                    joinDate: new Date(this.currentUser.createdAt).toLocaleDateString('vi-VN'),
+                    stats: { ...this.currentUser.stats }
+                };
+            }
+        }
+
+        const auth = new AuthSystem();
+
+        // ========== AUTH FUNCTIONS ==========
+        function initAuth() {
+            const savedUser = auth.loadCurrentUser();
+            if (savedUser) {
+                updateUIForLoggedInUser(savedUser);
+                loadUserSettings(savedUser.settings);
+                document.getElementById('authModal').style.display = 'none';
+                document.getElementById('mainMenu').style.display = 'flex';
+                document.getElementById('userAccountMenu').style.display = 'block'; // Hiển thị tài khoản trên menu
+            } else {
+                document.getElementById('authModal').style.display = 'flex';
+                document.getElementById('userAccountMenu').style.display = 'none';
+            }
+        }
+
+        function showAuthModal() {
+            document.getElementById('authModal').style.display = 'flex';
+        }
+
+        function hideAuthModal() {
+            document.getElementById('authModal').style.display = 'none';
+        }
+
+        function switchAuthTab(tab) {
+            const loginTab = document.getElementById('loginTab');
+            const registerTab = document.getElementById('registerTab');
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            
+            if (tab === 'login') {
+                loginTab.classList.add('active');
+                loginTab.classList.remove('text-gray-500');
+                loginTab.classList.add('text-purple-400', 'border-b-2', 'border-purple-400');
+                registerTab.classList.remove('active', 'text-purple-400', 'border-b-2', 'border-purple-400');
+                registerTab.classList.add('text-gray-300');
+                loginForm.style.display = 'block';
+                registerForm.style.display = 'none';
+            } else {
+                registerTab.classList.add('active');
+                registerTab.classList.remove('text-gray-300');
+                registerTab.classList.add('text-purple-400', 'border-b-2', 'border-purple-400');
+                loginTab.classList.remove('active', 'text-purple-400', 'border-b-2', 'border-purple-400');
+                loginTab.classList.add('text-gray-300');
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'block';
+            }
+        }
+
+        function handleLogin() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            const messageEl = document.getElementById('loginMessage');
+            
+            if (!username || !password) {
+                messageEl.textContent = 'Vui lòng nhập đầy đủ thông tin';
+                messageEl.className = 'mb-4 text-sm text-center text-red-400';
+                return;
+            }
+            
+            const result = auth.login(username, password);
+            
+            if (result.success) {
+                messageEl.textContent = result.message;
+                messageEl.className = 'mb-4 text-sm text-center text-green-400';
+                
+                updateUIForLoggedInUser(result.user);
+                loadUserSettings(result.user.settings);
+                
+                setTimeout(() => {
+                    hideAuthModal();
+                    document.getElementById('mainMenu').style.display = 'flex';
+                    document.getElementById('userAccountMenu').style.display = 'block'; // Hiển thị tài khoản trên menu
+                }, 1000);
+            } else {
+                messageEl.textContent = result.message;
+                messageEl.className = 'mb-4 text-sm text-center text-red-400';
+            }
+        }
+
+        function handleRegister() {
+            const username = document.getElementById('registerUsername').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const birthDate = document.getElementById('birthDate').value;
+            const gender = document.querySelector('input[name="gender"]:checked')?.value;
+            const messageEl = document.getElementById('registerMessage');
+            
+            if (password !== confirmPassword) {
+                messageEl.textContent = 'Mật khẩu xác nhận không khớp';
+                messageEl.className = 'mb-4 text-sm text-center text-red-400';
+                return;
+            }
+            
+            if (!username || !password || !birthDate || !gender) {
+                messageEl.textContent = 'Vui lòng điền đầy đủ thông tin';
+                messageEl.className = 'mb-4 text-sm text-center text-red-400';
+                return;
+            }
+            
+            const result = auth.register(username, password, birthDate, gender);
+            
+            if (result.success) {
+                messageEl.textContent = result.message;
+                messageEl.className = 'mb-4 text-sm text-center text-green-400';
+                
+                updateUIForLoggedInUser(result.user);
+                loadUserSettings(result.user.settings);
+                
+                setTimeout(() => {
+                    hideAuthModal();
+                    document.getElementById('mainMenu').style.display = 'flex';
+                    document.getElementById('userAccountMenu').style.display = 'block'; // Hiển thị tài khoản trên menu
+                }, 1000);
+            } else {
+                messageEl.textContent = result.message;
+                messageEl.className = 'mb-4 text-sm text-center text-red-400';
+            }
+        }
+
+        function updateUIForLoggedInUser(user) {
+            document.getElementById('userMenu').style.display = 'block';
+            document.getElementById('userAccountMenu').style.display = 'block'; // Hiển thị tài khoản trên menu
+            
+            // Cập nhật thông tin cho user menu trong game
+            document.getElementById('usernameDisplay').textContent = user.username;
+            document.getElementById('scoreDisplay').textContent = `Điểm cao: ${user.stats.bestScore}`;
+            document.getElementById('dropdownUsername').textContent = user.username;
+            document.getElementById('avatarText').textContent = user.username.charAt(0).toUpperCase();
+            document.getElementById('profileAvatar').textContent = user.username.charAt(0).toUpperCase();
+            
+            // Cập nhật thông tin cho user menu trên main menu
+            document.getElementById('mainMenuAvatarText').textContent = user.username.charAt(0).toUpperCase();
+            document.getElementById('mainMenuDropdownUsername').textContent = user.username;
+            
+            document.getElementById('menuButtonInGame').style.display = 'none';
+        }
+
+        function toggleUserDropdown() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        function toggleMainMenuUserDropdown() {
+            const dropdown = document.getElementById('mainMenuUserDropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        function showProfile() {
+            const userInfo = auth.getUserInfo();
+            if (!userInfo) return;
+            
+            document.getElementById('profileUsername').textContent = userInfo.username;
+            document.getElementById('profileAvatar').textContent = userInfo.username.charAt(0).toUpperCase();
+            document.getElementById('profileGender').textContent = userInfo.gender === 'male' ? 'Nam' : 
+                                                            userInfo.gender === 'female' ? 'Nữ' : 'Khác';
+            document.getElementById('profileAge').textContent = userInfo.age;
+            document.getElementById('profileBirthDate').textContent = new Date(userInfo.birthDate).toLocaleDateString('vi-VN');
+            document.getElementById('profileJoinDate').textContent = `Tham gia: ${userInfo.joinDate}`;
+            document.getElementById('profileGrade').textContent = selectedGrade;
+            
+            document.getElementById('userDropdown').classList.add('hidden');
+            document.getElementById('mainMenuUserDropdown').classList.add('hidden');
+            document.getElementById('profileModal').style.display = 'flex';
+        }
+
+        function showStats() {
+            const userInfo = auth.getUserInfo();
+            if (!userInfo) return;
+            
+            const stats = userInfo.stats;
+            document.getElementById('totalGames').textContent = stats.gamesPlayed;
+            document.getElementById('bestScore').textContent = stats.bestScore;
+            document.getElementById('totalScore').textContent = stats.totalScore;
+            document.getElementById('questionsAnswered').textContent = stats.questionsAnswered;
+            document.getElementById('correctAnswers').textContent = stats.correctAnswers;
+            
+            const accuracy = stats.questionsAnswered > 0 ? 
+                Math.round((stats.correctAnswers / stats.questionsAnswered) * 100) : 0;
+            document.getElementById('accuracy').textContent = `${accuracy}%`;
+            
+            document.getElementById('userDropdown').classList.add('hidden');
+            document.getElementById('mainMenuUserDropdown').classList.add('hidden');
+            document.getElementById('statsModal').style.display = 'flex';
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profileModal').style.display = 'none';
+        }
+
+        function closeStatsModal() {
+            document.getElementById('statsModal').style.display = 'none';
+        }
+
+        function logout() {
+            const result = auth.logout();
+            if (result.success) {
+                document.getElementById('userMenu').style.display = 'none';
+                document.getElementById('userAccountMenu').style.display = 'none'; // Ẩn tài khoản trên menu
+                document.getElementById('menuButtonInGame').style.display = 'flex';
+                showAuthModal();
+                document.getElementById('mainMenu').style.display = 'none';
+                
+                if (game) {
+                    game.reset();
+                    gameState = 'ready';
+                }
+            }
+        }
+
+        function loadUserSettings(userSettings) {
+            if (!userSettings) return;
+            
+            settings.volume = userSettings.volume || settings.volume;
+            settings.soundEnabled = userSettings.soundEnabled !== undefined ? userSettings.soundEnabled : settings.soundEnabled;
+            settings.gameSpeed = userSettings.gameSpeed || settings.gameSpeed;
+            settings.difficulty = userSettings.difficulty || settings.difficulty;
+            settings.language = userSettings.language || settings.language;
+            settings.currentBirdColor = userSettings.birdColor || settings.currentBirdColor;
+            settings.currentBgColor = userSettings.bgColor || settings.currentBgColor;
+            
+            updateAllSettingsUI();
+            updateLanguageTexts();
+            applyAllSettings();
+        }
+
+        function saveUserSettings() {
+            if (!auth.isLoggedIn) return;
+            
+            const userSettings = {
+                volume: settings.volume,
+                soundEnabled: settings.soundEnabled,
+                gameSpeed: settings.gameSpeed,
+                difficulty: settings.difficulty,
+                language: settings.language,
+                birdColor: settings.currentBirdColor,
+                bgColor: settings.currentBgColor
+            };
+            
+            auth.updateSettings(userSettings);
+        }
+
+        function updateGameStats() {
+            if (!auth.isLoggedIn || !game) return;
+            
+            const statsUpdate = {
+                gamesPlayed: 1,
+                totalScore: game.score
+            };
+            
+            auth.updateStats(statsUpdate);
+            auth.updateBestScore(game.score);
+        }
+
+        // ========== HỆ THỐNG CÀI ĐẶT ==========
+        const settings = {
+            bgColors: [
+                ['#70c5ce', '#4a90e2'],
+                ['#667eea', '#764ba2'],
+                ['#f093fb', '#f5576c'],
+                ['#4facfe', '#00f2fe'],
+                ['#43e97b', '#38f9d7'],
+                ['#fa709a', '#fee140'],
+                ['#30cfd0', '#330867'],
+                ['#a3bded', '#6991c7']
+            ],
+            
+            birdColors: [
+                ['#4facfe', '#00f2fe'],
+                ['#ff9a9e', '#fad0c4'],
+                ['#a1c4fd', '#c2e9fb'],
+                ['#84fab0', '#8fd3f4'],
+                ['#d4fc79', '#96e6a1'],
+                ['#a6c0fe', '#f68084'],
+                ['#f093fb', '#f5576c'],
+                ['#4facfe', '#00f2fe']
+            ],
+            
+            currentBgColor: 0,
+            currentBirdColor: 0,
+            gameSpeed: 1.0,
+            soundEnabled: true,
+            volume: 0.8,
+            language: 'vi',
+            difficulty: 'easy',
+            touchControl: true
+        };
+
+        // ========== TEXTS ĐA NGÔN NGỮ ==========
+        const texts = {
+            vi: {
+                // Menu chính
+                menuSubtitle: "Thử thách trí tuệ của bạn!",
+                gradeLabel: "Chọn lớp học:",
+                grade10: "Lớp 10",
+                grade11: "Lớp 11", 
+                grade12: "Lớp 12",
+                startGame: "▶ BẮT ĐẦU CHƠI",
+                settings: "⚙️ CÀI ĐẶT",
+                guide: "📖 HƯỚNG DẪN",
+                about: "ℹ️ GIỚI THIỆU",
+                
+                // Cài đặt
+                settingsTitle: "CÀI ĐẶT TRÒ CHƠI",
+                bgColorLabel: "🎨 Màu nền game:",
+                birdColorLabel: "🐦 Màu chim:",
+                gameSpeedLabel: "⚡ Tốc độ game:",
+                slow: "Chậm",
+                fast: "Nhanh",
+                soundLabel: "🔊 Âm thanh:",
+                soundToggle: "Bật/Tắt âm thanh",
+                volumeLabel: "🔈 Âm lượng:",
+                low: "Nhỏ",
+                high: "Lớn",
+                languageLabel: "🌐 Ngôn ngữ:",
+                difficultyLabel: "🎯 Độ khó:",
+                easy: "Dễ",
+                medium: "Trung bình",
+                hard: "Khó",
+                controlLabel: "🎮 Kiểm soát:",
+                touchControl: "Cho phép cảm ứng",
+                save: "💾 Lưu cài đặt",
+                reset: "🔄 Đặt lại",
+                close: "✕ Đóng",
+                
+                // Game
+                tapToFly: "CHẠM ĐỂ BAY",
+                gameOver: "THUA CUỘC",
+                score: "Điểm",
+                best: "Cao nhất",
+                tapToPlayAgain: "CHẠM ĐỂ CHƠI LẠI",
+                victory: "🎉 CHIẾN THẮNG!",
+                completedQuestions: "Hoàn thành câu hỏi!",
+                pause: "⏸️ TẠM DỪNG",
+                continue: "TIẾP TỤC",
+                
+                // Question modal
+                hint: "Gợi ý",
+                warning: "LƯU Ý:",
+                warningMessage: "Sai = Thua!",
+                correct: "ĐÚNG! +5 ĐIỂM",
+                wrong: "SAI! KẾT THÚC",
+                lastQuestion: "CÂU HỎI CUỐI!",
+                
+                // Win modal
+                winTitle: "🎉 CHIẾN THẮNG!",
+                winMessage: "Hoàn thành tất cả câu hỏi lớp ",
+                winScore: "Điểm:",
+                winQuestions: "Câu hỏi:",
+                winBest: "Điểm cao nhất:",
+                home: "VỀ TRANG CHỦ",
+                playAgain: "CHƠI LẠI",
+                
+                // Modal
+                closeModal: "Đóng",
+                
+                // Auth
+                loginTab: "ĐĂNG NHẬP",
+                registerTab: "ĐĂNG KÝ",
+                loginUsername: "Tên đăng nhập:",
+                loginPassword: "Mật khẩu:",
+                loginButton: "ĐĂNG NHẬP",
+                switchToRegister: "Chưa có tài khoản? Đăng ký ngay",
+                registerUsername: "Tên đăng nhập*:",
+                usernameHelp: "Mỗi tên đăng nhập chỉ được dùng một lần",
+                registerPassword: "Mật khẩu*:",
+                confirmPassword: "Xác nhận mật khẩu*:",
+                birthDate: "Ngày sinh*:",
+                gender: "Giới tính*:",
+                genderMale: "Nam",
+                genderFemale: "Nữ",
+                genderOther: "Khác",
+                registerButton: "ĐĂNG KÝ TÀI KHOẢN",
+                switchToLogin: "Đã có tài khoản? Đăng nhập",
+                profile: "Hồ sơ",
+                stats: "Thống kê",
+                logout: "Đăng xuất",
+                profileTitle: "HỒ SƠ NGƯỜI DÙNG",
+                statsTitle: "THỐNG KÊ TRÒ CHƠI",
+                totalGames: "Số lần chơi:",
+                bestScore: "Điểm cao nhất:",
+                totalScore: "Tổng điểm:",
+                questionsAnswered: "Câu hỏi đã trả lời:",
+                correctAnswers: "Câu trả lời đúng:",
+                accuracy: "Tỷ lệ đúng:",
+                closeProfile: "Đóng",
+                closeStats: "Đóng"
+            },
+            en: {
+                // Main menu
+                menuSubtitle: "Challenge your brain!",
+                gradeLabel: "Select grade:",
+                grade10: "Grade 10",
+                grade11: "Grade 11",
+                grade12: "Grade 12",
+                startGame: "▶ START GAME",
+                settings: "⚙️ SETTINGS",
+                guide: "📖 GUIDE",
+                about: "ℹ️ ABOUT",
+                
+                // Settings
+                settingsTitle: "GAME SETTINGS",
+                bgColorLabel: "🎨 Background color:",
+                birdColorLabel: "🐦 Bird color:",
+                gameSpeedLabel: "⚡ Game speed:",
+                slow: "Slow",
+                fast: "Fast",
+                soundLabel: "🔊 Sound:",
+                soundToggle: "Enable/Disable sound",
+                volumeLabel: "🔈 Volume:",
+                low: "Low",
+                high: "High",
+                languageLabel: "🌐 Language:",
+                difficultyLabel: "🎯 Difficulty:",
+                easy: "Easy",
+                medium: "Medium",
+                hard: "Hard",
+                controlLabel: "🎮 Controls:",
+                touchControl: "Allow touch control",
+                save: "💾 Save settings",
+                reset: "🔄 Reset",
+                close: "✕ Close",
+                
+                // Game
+                tapToFly: "TAP TO FLY",
+                gameOver: "GAME OVER",
+                score: "Score",
+                best: "Best",
+                tapToPlayAgain: "TAP TO PLAY AGAIN",
+                victory: "🎉 VICTORY!",
+                completedQuestions: "Completed questions!",
+                pause: "⏸️ PAUSED",
+                continue: "CONTINUE",
+                
+                // Question modal
+                hint: "Hint",
+                warning: "WARNING:",
+                warningMessage: "Wrong = Game Over!",
+                correct: "CORRECT! +5 POINTS",
+                wrong: "WRONG! GAME OVER",
+                lastQuestion: "LAST QUESTION!",
+                
+                // Win modal
+                winTitle: "🎉 VICTORY!",
+                winMessage: "Completed all questions for grade ",
+                winScore: "Score:",
+                winQuestions: "Questions:",
+                winBest: "Best score:",
+                home: "BACK TO HOME",
+                playAgain: "PLAY AGAIN",
+                
+                // Modal
+                closeModal: "Close",
+                
+                // Auth
+                loginTab: "LOGIN",
+                registerTab: "REGISTER",
+                loginUsername: "Username:",
+                loginPassword: "Password:",
+                loginButton: "LOGIN",
+                switchToRegister: "Don't have an account? Register now",
+                registerUsername: "Username*:",
+                usernameHelp: "Each username can only be used once",
+                registerPassword: "Password*:",
+                confirmPassword: "Confirm Password*:",
+                birthDate: "Birth Date*:",
+                gender: "Gender*:",
+                genderMale: "Male",
+                genderFemale: "Female",
+                genderOther: "Other",
+                registerButton: "REGISTER ACCOUNT",
+                switchToLogin: "Already have an account? Login",
+                profile: "Profile",
+                stats: "Statistics",
+                logout: "Logout",
+                profileTitle: "USER PROFILE",
+                statsTitle: "GAME STATISTICS",
+                totalGames: "Games Played:",
+                bestScore: "Best Score:",
+                totalScore: "Total Score:",
+                questionsAnswered: "Questions Answered:",
+                correctAnswers: "Correct Answers:",
+                accuracy: "Accuracy Rate:",
+                closeProfile: "Close",
+                closeStats: "Close"
+            }
+        };
+
+        // ========== MENU FUNCTIONS ==========
+        let selectedGrade = 10;
+        let isPaused = false;
+
+        function selectGrade(grade) {
+            selectedGrade = grade;
+            
+            document.getElementById('grade10Btn').classList.remove('active');
+            document.getElementById('grade11Btn').classList.remove('active');
+            document.getElementById('grade12Btn').classList.remove('active');
+            
+            document.getElementById(`grade${grade}Btn`).classList.add('active');
+            
+            updateQuestionsByGrade(grade);
+            
+            const gradeNames = settings.language === 'vi' ? 
+                {10: "Mười", 11: "Mười Một", 12: "Mười Hai"} :
+                {10: "Ten", 11: "Eleven", 12: "Twelve"};
+            const effectArea = document.getElementById('effect-area');
+            const e = document.createElement('div');
+            e.textContent = settings.language === 'vi' ? 
+                `Đã chọn lớp ${gradeNames[grade]}` : 
+                `Selected grade ${gradeNames[grade]}`;
+            e.className = 'score-plus-effect';
+            e.style.left = '50%';
+            e.style.top = '50%';
+            e.style.color = '#f093fb';
+            effectArea.appendChild(e);
+            setTimeout(() => e.remove(), 1500);
+        }
+
+        function toggleSettings() {
+            const panel = document.getElementById('settingsPanel');
+            const isVisible = panel.style.display === 'block';
+            panel.style.display = isVisible ? 'none' : 'block';
+            
+            if (!isVisible) {
+                loadSettings();
+            }
+        }
+
+        function loadSettings() {
+            const saved = localStorage.getItem('flappyBrainSettings');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                Object.assign(settings, parsed);
+                console.log('Loaded settings:', settings);
+            }
+            updateAllSettingsUI();
+            updateLanguageTexts();
+        }
+
+        function updateAllSettingsUI() {
+            document.querySelectorAll('.color-option').forEach((opt, index) => {
+                opt.classList.toggle('active', index === settings.currentBgColor);
+            });
+            
+            document.getElementById('gameSpeedSlider').value = settings.gameSpeed * 100;
+            document.getElementById('speedValue').textContent = `${Math.round(settings.gameSpeed * 100)}%`;
+            
+            document.getElementById('soundToggle').checked = settings.soundEnabled;
+            
+            document.getElementById('volumeSlider').value = settings.volume * 100;
+            document.getElementById('volumeValue').textContent = `${Math.round(settings.volume * 100)}%`;
+            
+            document.querySelectorAll('.lang-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.lang-button[onclick*="${settings.language}"]`).classList.add('active');
+            
+            document.querySelectorAll('.lang-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.lang-button[onclick*="${settings.difficulty}"]`).classList.add('active');
+            
+            document.getElementById('touchToggle').checked = settings.touchControl;
+        }
+
+        function selectBgColor(index) {
+            settings.currentBgColor = index;
+            document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('active'));
+            event.target.classList.add('active');
+            applyBgColor();
+        }
+
+        function selectBirdColor(index) {
+            settings.currentBirdColor = index;
+            document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('active'));
+            event.target.classList.add('active');
+            applyBirdColor();
+        }
+
+        function updateGameSpeed(value) {
+            settings.gameSpeed = value / 100;
+            document.getElementById('speedValue').textContent = `${value}%`;
+            if (game && gameState === 'play') {
+                BASE_SPEED = 1.2 * settings.gameSpeed;
+            }
+        }
+
+        function toggleSound(enabled) {
+            settings.soundEnabled = enabled;
+            Object.values(assets).forEach(asset => {
+                if (asset instanceof Audio) {
+                    asset.muted = !enabled;
+                }
+            });
+        }
+
+        function updateVolume(value) {
+            settings.volume = value / 100;
+            document.getElementById('volumeValue').textContent = `${value}%`;
+            Object.values(assets).forEach(asset => {
+                if (asset instanceof Audio) {
+                    asset.volume = settings.volume;
+                }
+            });
+        }
+
+        function selectLanguage(lang) {
+            settings.language = lang;
+            document.querySelectorAll('.lang-button').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            updateLanguageTexts();
+            saveSettings();
+        }
+
+        function selectDifficulty(diff) {
+            settings.difficulty = diff;
+            document.querySelectorAll('.lang-button').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            applyDifficulty();
+        }
+
+        function toggleTouchControl(enabled) {
+            settings.touchControl = enabled;
+        }
+
+        function saveSettings() {
+            localStorage.setItem('flappyBrainSettings', JSON.stringify(settings));
+            applyAllSettings();
+            saveUserSettings();
+            
+            const effectArea = document.getElementById('effect-area');
+            const e = document.createElement('div');
+            e.textContent = settings.language === 'vi' ? 'Đã lưu cài đặt!' : 'Settings saved!';
+            e.className = 'score-plus-effect';
+            e.style.left = '50%';
+            e.style.top = '50%';
+            e.style.color = '#4ade80';
+            effectArea.appendChild(e);
+            setTimeout(() => e.remove(), 1500);
+            
+            toggleSettings();
+        }
+
+        function resetSettings() {
+            settings.currentBgColor = 0;
+            settings.currentBirdColor = 0;
+            settings.gameSpeed = 1.0;
+            settings.soundEnabled = true;
+            settings.volume = 0.8;
+            settings.language = 'vi';
+            settings.difficulty = 'easy';
+            settings.touchControl = true;
+            
+            updateAllSettingsUI();
+            applyAllSettings();
+            updateLanguageTexts();
+            
+            const effectArea = document.getElementById('effect-area');
+            const e = document.createElement('div');
+            e.textContent = settings.language === 'vi' ? 'Đã đặt lại!' : 'Reset complete!';
+            e.className = 'score-plus-effect';
+            e.style.left = '50%';
+            e.style.top = '50%';
+            e.style.color = '#f5576c';
+            effectArea.appendChild(e);
+            setTimeout(() => e.remove(), 1500);
+        }
+
+        function applyAllSettings() {
+            applyBgColor();
+            applyBirdColor();
+            toggleSound(settings.soundEnabled);
+            updateVolume(settings.volume * 100);
+            applyDifficulty();
+        }
+
+        function applyBgColor() {
+            console.log('Background color setting ignored - using pixel art background image');
+        }
+
+        function applyBirdColor() {
+            console.log('Bird color setting ignored - using pixel art bird sprites');
+        }
+
+        function updateLanguageTexts() {
+            const lang = settings.language;
+            const t = texts[lang];
+            
+            // Menu chính
+            document.getElementById('menuSubtitle').textContent = t.menuSubtitle;
+            document.getElementById('gradeLabel').textContent = t.gradeLabel;
+            document.getElementById('grade10Text').textContent = t.grade10;
+            document.getElementById('grade11Text').textContent = t.grade11;
+            document.getElementById('grade12Text').textContent = t.grade12;
+            document.getElementById('startGameText').textContent = t.startGame;
+            document.getElementById('settingsText').textContent = t.settings;
+            document.getElementById('guideText').textContent = t.guide;
+            document.getElementById('aboutText').textContent = t.about;
+            
+            // Cài đặt
+            document.getElementById('settingsTitle').textContent = t.settingsTitle;
+            document.getElementById('bgColorLabel').textContent = t.bgColorLabel;
+            document.getElementById('birdColorLabel').textContent = t.birdColorLabel;
+            document.getElementById('gameSpeedLabel').textContent = t.gameSpeedLabel;
+            document.getElementById('slowText').textContent = t.slow;
+            document.getElementById('fastText').textContent = t.fast;
+            document.getElementById('soundLabel').textContent = t.soundLabel;
+            document.getElementById('soundToggleText').textContent = t.soundToggle;
+            document.getElementById('volumeLabel').textContent = t.volumeLabel;
+            document.getElementById('lowText').textContent = t.low;
+            document.getElementById('highText').textContent = t.high;
+            document.getElementById('languageLabel').textContent = t.languageLabel;
+            document.getElementById('difficultyLabel').textContent = t.difficultyLabel;
+            document.getElementById('easyBtn').textContent = t.easy;
+            document.getElementById('mediumBtn').textContent = t.medium;
+            document.getElementById('hardBtn').textContent = t.hard;
+            document.getElementById('controlLabel').textContent = t.controlLabel;
+            document.getElementById('touchControlText').textContent = t.touchControl;
+            document.getElementById('saveText').textContent = t.save;
+            document.getElementById('resetText').textContent = t.reset;
+            document.getElementById('closeText').textContent = t.close;
+            
+            // Question modal
+            document.getElementById('hintText').textContent = t.hint;
+            document.getElementById('warningText').textContent = t.warning;
+            document.getElementById('warningMessage').textContent = t.warningMessage;
+            
+            // Win modal
+            document.getElementById('winTitle').textContent = t.winTitle;
+            document.getElementById('winScoreLabel').textContent = t.winScore;
+            document.getElementById('winQuestionsLabel').textContent = t.winQuestions;
+            document.getElementById('winBestLabel').textContent = t.winBest;
+            document.getElementById('homeText').textContent = t.home;
+            document.getElementById('playAgainText').textContent = t.playAgain;
+            
+            // Modal
+            document.getElementById('closeModalBtn').textContent = t.closeModal;
+            
+            // Auth texts
+            document.getElementById('loginTabText').textContent = t.loginTab;
+            document.getElementById('registerTabText').textContent = t.registerTab;
+            document.getElementById('loginUsernameLabel').textContent = t.loginUsername;
+            document.getElementById('loginPasswordLabel').textContent = t.loginPassword;
+            document.getElementById('loginButton').textContent = t.loginButton;
+            document.getElementById('switchToRegisterText').innerHTML = t.switchToRegister.replace('Đăng ký ngay', '<a href="javascript:void(0)" onclick="switchAuthTab(\'register\')" class="text-purple-400 font-bold">' + (lang === 'vi' ? 'Đăng ký ngay' : 'Register now') + '</a>');
+            document.getElementById('registerUsernameLabel').textContent = t.registerUsername;
+            document.getElementById('usernameHelpText').textContent = t.usernameHelp;
+            document.getElementById('registerPasswordLabel').textContent = t.registerPassword;
+            document.getElementById('confirmPasswordLabel').textContent = t.confirmPassword;
+            document.getElementById('birthDateLabel').textContent = t.birthDate;
+            document.getElementById('genderLabel').textContent = t.gender;
+            document.getElementById('genderMaleText').textContent = t.genderMale;
+            document.getElementById('genderFemaleText').textContent = t.genderFemale;
+            document.getElementById('genderOtherText').textContent = t.genderOther;
+            document.getElementById('registerButton').textContent = t.registerButton;
+            document.getElementById('switchToLoginText').innerHTML = t.switchToLogin.replace('Đăng nhập', '<a href="javascript:void(0)" onclick="switchAuthTab(\'login\')" class="text-purple-400 font-bold">' + (lang === 'vi' ? 'Đăng nhập' : 'Login') + '</a>');
+            
+            // User dropdown texts
+            document.getElementById('profileText').textContent = t.profile;
+            document.getElementById('statsText').textContent = t.stats;
+            document.getElementById('logoutText').textContent = t.logout;
+            
+            // Main menu user dropdown texts
+            document.getElementById('mainMenuProfileText').textContent = t.profile;
+            document.getElementById('mainMenuStatsText').textContent = t.stats;
+            document.getElementById('mainMenuLogoutText').textContent = t.logout;
+            
+            // Profile modal texts
+            document.getElementById('profileTitle').textContent = t.profileTitle;
+            document.getElementById('closeProfileText').textContent = t.closeProfile;
+            
+            // Stats modal texts
+            document.getElementById('statsTitle').textContent = t.statsTitle;
+            document.getElementById('totalGamesText').textContent = t.totalGames;
+            document.getElementById('bestScoreText').textContent = t.bestScore;
+            document.getElementById('totalScoreText').textContent = t.totalScore;
+            document.getElementById('questionsAnsweredText').textContent = t.questionsAnswered;
+            document.getElementById('correctAnswersText').textContent = t.correctAnswers;
+            document.getElementById('accuracyText').textContent = t.accuracy;
+            document.getElementById('closeStatsText').textContent = t.closeStats;
+        }
+
+        function applyDifficulty() {
+            switch(settings.difficulty) {
+                case 'easy':
+                    PIPE_GAP = 140;
+                    BASE_SPEED = 1.0;
+                    break;
+                case 'medium':
+                    PIPE_GAP = 130;
+                    BASE_SPEED = 1.2;
+                    break;
+                case 'hard':
+                    PIPE_GAP = 120;
+                    BASE_SPEED = 1.5;
+                    break;
+            }
+        }
+
+        // ========== HÀM HIỂN THỊ MODAL ==========
+        function showInfo() {
+            const t = texts[settings.language];
+            document.getElementById('modalTitle').textContent = t.guide.replace('📖 ', '');
+            
+            if (settings.language === 'vi') {
+                document.getElementById('modalBody').innerHTML = `
+                    <h3>🎮 Cách chơi:</h3>
+                    <ul>
+                        <li>Nhấn vào màn hình hoặc phím Space để chim bay lên</li>
+                        <li>Tránh chạm vào ống và mặt đất</li>
+                        <li>Bay qua ống để ghi điểm</li>
+                    </ul>
+
+                    <h3>❓ Câu hỏi:</h3>
+                    <ul>
+                        <li>Sau mỗi 5 ống, bạn sẽ gặp câu hỏi trắc nghiệm</li>
+                        <li>Trả lời đúng: +5 điểm và xóa 2 ống phía trước</li>
+                        <li>Trả lời sai: Game Over ngay lập tức!</li>
+                    </ul>
+
+                    <h3>💡 Gợi ý:</h3>
+                    <ul>
+                        <li>Nhận 1 gợi ý sau mỗi 10 điểm</li>
+                        <li>Gợi ý sẽ loại bỏ 2 đáp án sai</li>
+                        <li>Sử dụng thông minh để vượt qua thử thách!</li>
+                    </ul>
+
+                    <h3>🎯 Chiến thắng:</h3>
+                    <ul>
+                        <li>Hoàn thành tất cả câu hỏi của lớp học để chiến thắng</li>
+                        <li>Sau câu hỏi cuối cùng, game tiếp tục 1 giây rồi hiện màn hình chiến thắng</li>
+                    </ul>
+
+                    <h3>⏸️ Tạm dừng:</h3>
+                    <ul>
+                        <li>Nhấn nút pause ở góc phải để tạm dừng game</li>
+                        <li>Nhấn nút "Tiếp tục" để quay lại game</li>
+                    </ul>
+
+                    <h3>🏆 Mục tiêu:</h3>
+                    <p>Ghi điểm cao nhất có thể bằng cách kết hợp kỹ năng bay và kiến thức!</p>
+                `;
+            } else {
+                document.getElementById('modalBody').innerHTML = `
+                    <h3>🎮 How to Play:</h3>
+                    <ul>
+                        <li>Tap the screen or press Space to make the bird fly up</li>
+                        <li>Avoid hitting pipes and the ground</li>
+                        <li>Fly through pipes to score points</li>
+                    </ul>
+
+                    <h3>❓ Questions:</h3>
+                    <ul>
+                        <li>After every 5 pipes, you'll encounter a multiple-choice question</li>
+                        <li>Correct answer: +5 points and remove 2 pipes ahead</li>
+                        <li>Wrong answer: Game Over immediately!</li>
+                    </ul>
+
+                    <h3>💡 Hints:</h3>
+                    <ul>
+                        <li>Get 1 hint for every 10 points scored</li>
+                        <li>Hint will eliminate 2 wrong answers</li>
+                        <li>Use wisely to overcome challenges!</li>
+                    </ul>
+
+                    <h3>🎯 Victory:</h3>
+                    <ul>
+                        <li>Complete all questions for your grade to win</li>
+                        <li>After the last question, game continues for 1 second then shows victory screen</li>
+                    </ul>
+
+                    <h3>⏸️ Pause:</h3>
+                    <ul>
+                        <li>Press the pause button at top right to pause the game</li>
+                        <li>Press "Continue" button to resume playing</li>
+                    </ul>
+
+                    <h3>🏆 Goal:</h3>
+                    <p>Achieve the highest score by combining flying skills and knowledge!</p>
+                `;
+            }
+            document.getElementById('infoModal').style.display = 'flex';
+        }
+
+        function showAbout() {
+            const t = texts[settings.language];
+            document.getElementById('modalTitle').textContent = t.about.replace('ℹ️ ', '');
+            
+            if (settings.language === 'vi') {
+                document.getElementById('modalBody').innerHTML = `
+                    <h3>🧠 Flappy Brain - Game Trí Tuệ & Phản Xạ</h3>
+                    <p>Phiên bản đặc biệt kết hợp giữa game Flappy Bird kinh điển và hệ thống câu hỏi trắc nghiệm đa môn học!</p>
+                    
+                    <h3>✨ Đặc điểm nổi bật:</h3>
+                    <ul>
+                        <li>🎮 Gameplay đơn giản nhưng cực kỳ thử thách</li>
+                        <li>📚 Hệ thống câu hỏi đa dạng từ Toán, Lý, Hóa, Sinh, Văn, Anh, Sử, Địa</li>
+                        <li>🏫 Phân loại theo lớp học: 10, 11, 12</li>
+                        <li>⚙️ Hệ thống cài đặt toàn diện: màu sắc, âm thanh, tốc độ, độ khó</li>
+                        <li>💡 Hệ thống gợi ý thông minh (loại bỏ 2 đáp án sai)</li>
+                        <li>🎨 Đồ họa pixel art dễ thương với nhiều tùy chọn màu sắc</li>
+                        <li>🌐 Hỗ trợ đa ngôn ngữ: Tiếng Việt & Tiếng Anh</li>
+                        <li>🏆 Chế độ chiến thắng khi hoàn thành tất cả câu hỏi</li>
+                    </ul>
+
+                    <h3>👨‍💻 Tác giả & Phát triển:</h3>
+                    <p style="text-align: center; font-weight: bold; color: #764ba2; font-size: 1.3rem;">
+                        <span style="color: #667eea;">taqanthan</span> - Nhà phát triển game độc lập
+                    </p>
+                    
+                    <h3>🎯 Mục tiêu giáo dục:</h3>
+                    <ul>
+                        <li>Kết hợp giải trí và học tập một cách tự nhiên</li>
+                        <li>Rèn luyện phản xạ nhanh và tư duy logic</li>
+                        <li>Ôn tập kiến thức đa môn học theo chương trình phổ thông</li>
+                        <li>Phát triển kỹ năng ra quyết định dưới áp lực thời gian</li>
+                    </ul>
+
+                    <h3>📊 Thông tin kỹ thuật:</h3>
+                    <ul>
+                        <li>Phiên bản: 4.0 - Complete Edition</li>
+                        <li>Ngôn ngữ: HTML5, CSS3, JavaScript Vanilla</li>
+                        <li>Hỗ trợ: Desktop & Mobile</li>
+                        <li>Tổng số câu hỏi: 50+ (chia đều 3 lớp)</li>
+                        <li>Năm phát triển: 2026</li>
+                    </ul>
+
+                    <p style="text-align: center; margin-top: 1.5rem; color: #667eea; font-style: italic;">
+                        "Học mà chơi, chơi mà học - Trí tuệ và phản xạ cùng phát triển!"
+                    </p>
+
+                    <div style="text-align: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #eee;">
+                        <p style="font-size: 0.9rem; color: #666;">
+                            © 2026 taqanthan. All rights reserved.<br>
+                            Game được phát triển với mục đích giáo dục và giải trí lành mạnh.
+                        </p>
+                    </div>
+                `;
+            } else {
+                document.getElementById('modalBody').innerHTML = `
+                    <h3>🧠 Flappy Brain - Intelligence & Reflex Game</h3>
+                    <p>Special edition combining classic Flappy Bird gameplay with multi-subject quiz system!</p>
+                    
+                    <h3>✨ Key Features:</h3>
+                    <ul>
+                        <li>🎮 Simple yet challenging gameplay</li>
+                        <li>📚 Diverse questions from Math, Physics, Chemistry, Biology, Literature, English, History, Geography</li>
+                        <li>🏫 Organized by grade levels: 10, 11, 12</li>
+                        <li>⚙️ Comprehensive settings: colors, sound, speed, difficulty</li>
+                        <li>💡 Smart hint system (eliminates 2 wrong answers)</li>
+                        <li>🎨 Cute pixel art graphics with multiple color options</li>
+                        <li>🌐 Multi-language support: Vietnamese & English</li>
+                        <li>🏆 Victory mode when completing all questions</li>
+                    </ul>
+
+                    <h3>👨‍💻 Author & Development:</h3>
+                    <p style="text-align: center; font-weight: bold; color: #764ba2; font-size: 1.3rem;">
+                        <span style="color: #667eea;">taqanthan</span> - Independent Game Developer
+                    </p>
+                    
+                    <h3>🎯 Educational Goals:</h3>
+                    <ul>
+                        <li>Combine entertainment and learning naturally</li>
+                        <li>Train quick reflexes and logical thinking</li>
+                        <li>Review multi-subject knowledge according to curriculum</li>
+                        <li>Develop decision-making skills under time pressure</li>
+                    </ul>
+
+                    <h3>📊 Technical Information:</h3>
+                    <ul>
+                        <li>Version: 4.0 - Complete Edition</li>
+                        <li>Language: HTML5, CSS3, Vanilla JavaScript</li>
+                        <li>Support: Desktop & Mobile</li>
+                        <li>Total questions: 50+ (evenly distributed across 3 grades)</li>
+                        <li>Development year: 2026</li>
+                    </ul>
+
+                    <p style="text-align: center; margin-top: 1.5rem; color: #667eea; font-style: italic;">
+                        "Learn while playing, play while learning - Intelligence and reflexes develop together!"
+                    </p>
+
+                    <div style="text-align: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #eee;">
+                        <p style="font-size: 0.9rem; color: #666;">
+                            © 2026 taqanthan. All rights reserved.<br>
+                            Game developed for educational and wholesome entertainment purposes.
+                        </p>
+                    </div>
+                `;
+            }
+            document.getElementById('infoModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('infoModal').style.display = 'none';
+        }
+
+        // ========== CÁC HÀM GAME CƠ BẢN ==========
+        function startGame() {
+            document.getElementById('mainMenu').style.display = 'none';
+            document.getElementById('jumpButton').style.display = 'flex';
+            document.getElementById('pauseButton').style.display = 'flex';
+            document.getElementById('returnToMenuButton').style.display = 'flex'; // Hiển thị nút quay về menu
+            
+            if (auth.isLoggedIn) {
+                document.getElementById('userMenu').style.display = 'block';
+                document.getElementById('menuButtonInGame').style.display = 'none';
+                document.getElementById('userAccountMenu').style.display = 'none'; // Ẩn tài khoản trên menu khi vào game
+            } else {
+                document.getElementById('userMenu').style.display = 'none';
+                document.getElementById('menuButtonInGame').style.display = 'flex';
+                document.getElementById('userAccountMenu').style.display = 'none'; // Ẩn tài khoản trên menu khi vào game
+            }
+            
+            updateQuestionsByGrade(selectedGrade);
+            applyAllSettings();
+            updateLanguageTexts();
+            
+            if (game) {
+                game.reset();
+                gameState = 'ready';
+                isPaused = false;
+            }
+        }
+
+        function returnToMenu() {
+            document.getElementById('mainMenu').style.display = 'flex';
+            document.getElementById('jumpButton').style.display = 'none';
+            document.getElementById('pauseButton').style.display = 'none';
+            document.getElementById('returnToMenuButton').style.display = 'none'; // Ẩn nút quay về menu
+            
+            if (auth.isLoggedIn) {
+                document.getElementById('userMenu').style.display = 'none';
+                document.getElementById('menuButtonInGame').style.display = 'none';
+                document.getElementById('userAccountMenu').style.display = 'block'; // Hiển thị tài khoản trên menu
+            } else {
+                document.getElementById('userMenu').style.display = 'none';
+                document.getElementById('menuButtonInGame').style.display = 'none';
+                document.getElementById('userAccountMenu').style.display = 'none';
+            }
+            
+            if (game) {
+                game.reset();
+                gameState = 'ready';
+                isPaused = false;
+            }
+        }
+
+        // Hàm quay về menu từ trong game (nút mới)
+        function returnToMenuFromGame() {
+            if (confirm(settings.language === 'vi' ? 'Bạn có chắc muốn quay về menu? Tiến trình hiện tại sẽ bị mất.' : 'Are you sure you want to return to menu? Current progress will be lost.')) {
+                returnToMenu();
+            }
+        }
+
+        function togglePause() {
+            if (gameState === 'play' || gameState === 'ready' || gameState === 'over') {
+                isPaused = !isPaused;
+                const pauseBtn = document.getElementById('pauseButton');
+                if (isPaused) {
+                    pauseBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                            <path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd" />
+                        </svg>
+                    `;
+                    pauseBtn.classList.remove('bg-yellow-500');
+                    pauseBtn.classList.add('bg-green-500');
+                    game.showPauseOverlay();
+                } else {
+                    pauseBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                            <path fill-rule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75-.75H9a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H7.5a.75.75 0 0 1-.75-.75V5.25Zm7.5 0A.75.75 0 0 1 15 4.5h1.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H15a.75.75 0 0 1-.75-.75V5.25Z" clip-rule="evenodd" />
+                        </svg>
+                    `;
+                    pauseBtn.classList.remove('bg-green-500');
+                    pauseBtn.classList.add('bg-yellow-500');
+                    game.hidePauseOverlay();
+                }
+            }
+        }
+
+        function showWinModal() {
+            const t = texts[settings.language];
+            document.getElementById('winTitle').textContent = t.winTitle;
+            document.getElementById('winMessage').innerHTML = t.winMessage + '<span id="winGrade">' + selectedGrade + '</span>!';
+            document.getElementById('winScoreLabel').textContent = t.winScore;
+            document.getElementById('winQuestionsLabel').textContent = t.winQuestions;
+            document.getElementById('winBestLabel').textContent = t.winBest;
+            document.getElementById('homeText').textContent = t.home;
+            document.getElementById('playAgainText').textContent = t.playAgain;
+            
+            document.getElementById('winScore').textContent = game.score;
+            document.getElementById('winAnswered').textContent = game.answeredQuestionsCount || 0;
+            document.getElementById('winTotal').textContent = game.originalQuestions.length;
+            document.getElementById('winBest').textContent = game.bestScore;
+            
+            createConfetti();
+            
+            document.getElementById('winModal').style.display = 'flex';
+        }
+
+        function createConfetti() {
+            const colors = ['#FFD700', '#FF6B6B', '#4ECDC4', '#FFA726', '#42A5F5'];
+            const winModal = document.getElementById('winModal');
+            
+            for (let i = 0; i < 30; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.width = `${5 + Math.random() * 10}px`;
+                confetti.style.height = `${10 + Math.random() * 15}px`;
+                confetti.style.animationDelay = `${Math.random() * 0.5}s`;
+                winModal.appendChild(confetti);
+                
+                setTimeout(() => confetti.remove(), 2000);
+            }
+        }
+
+        function returnToMenuFromWin() {
+            document.getElementById('winModal').style.display = 'none';
+            document.getElementById('mainMenu').style.display = 'flex';
+            document.getElementById('jumpButton').style.display = 'none';
+            document.getElementById('menuButtonInGame').style.display = 'none';
+            document.getElementById('pauseButton').style.display = 'none';
+            document.getElementById('returnToMenuButton').style.display = 'none';
+            
+            if (auth.isLoggedIn) {
+                document.getElementById('userAccountMenu').style.display = 'block'; // Hiển thị tài khoản trên menu
+            }
+        }
+
+        function playAgainFromWin() {
+            document.getElementById('winModal').style.display = 'none';
+            startGame();
+        }
+
+        // ========== BỘ CÂU HỎI ==========
+        const QUESTIONS_GRADE_10 = [
+            { subject: "Toán Học", text: "Tập xác định của hàm số y = √(x-2) là gì?", options: ["A. [2; +∞)", "B. (-∞; 2]", "C. ℝ", "D. (2; +∞)"], answer: "A" },
+            { subject: "Toán Học", text: "Nghiệm của phương trình 2x - 3 = 5 là:", options: ["A. x = 4", "B. x = -4", "C. x = 2", "D. x = -2"], answer: "A" },
+            { subject: "Toán Học", text: "Tính giá trị biểu thức: (3 + 5) × 2", options: ["A. 16", "B. 13", "C. 11", "D. 8"], answer: "A" },
+            { subject: "Toán Học", text: "Hàm số nào sau đây là hàm số bậc nhất?", options: ["A. y = 3x - 2", "B. y = x² + 1", "C. y = √x", "D. y = 2/x"], answer: "A" },
+            { subject: "Toán Học", text: "Giải phương trình: 3x + 2 = 11", options: ["A. x = 3", "B. x = 2", "C. x = 4", "D. x = 5"], answer: "A" },
+            
+            { subject: "Vật Lý", text: "Đơn vị của lực trong hệ SI là:", options: ["A. Newton", "B. Joule", "C. Watt", "D. Pascal"], answer: "A" },
+            { subject: "Vật Lý", text: "Công thức tính vận tốc trung bình là:", options: ["A. v = s/t", "B. v = s×t", "C. v = t/s", "D. v = s²/t"], answer: "A" },
+            { subject: "Vật Lý", text: "Định luật Newton thứ nhất còn gọi là:", options: ["A. Định luật quán tính", "B. Định luật gia tốc", "C. Định luật phản lực", "D. Định luật hấp dẫn"], answer: "A" },
+            
+            { subject: "Hóa Học", text: "Công thức hóa học của nước là:", options: ["A. H₂O", "B. CO₂", "C. O₂", "D. H₂"], answer: "A" },
+            { subject: "Hóa Học", text: "Kim loại nào tác dụng mạnh với nước?", options: ["A. Natri", "B. Sắt", "C. Đồng", "D. Bạc"], answer: "A" },
+            
+            { subject: "Sinh Học", text: "Đơn vị cấu trúc cơ bản của cơ thể sống là:", options: ["A. Tế bào", "B. Mô", "C. Cơ quan", "D. Hệ cơ quan"], answer: "A" },
+            { subject: "Sinh Học", text: "Quá trình quang hợp xảy ra ở:", options: ["A. Lá cây", "B. Rễ cây", "C. Thân cây", "D. Hoa cây"], answer: "A" },
+            
+            { subject: "Ngữ Văn", text: "Tác phẩm 'Truyện Kiều' của Nguyễn Du được viết bằng chữ:", options: ["A. Chữ Nôm", "B. Chữ Hán", "C. Chữ Quốc ngữ", "D. Chữ Phạn"], answer: "A" },
+            { subject: "Ngữ Văn", text: "Tác giả của 'Chí Phèo' là:", options: ["A. Nam Cao", "B. Ngô Tất Tố", "C. Vũ Trọng Phụng", "D. Nguyễn Công Hoan"], answer: "A" },
+            
+            { subject: "Tiếng Anh", text: "What is the past tense of 'go'?", options: ["A. went", "B. gone", "C. going", "D. goed"], answer: "A" },
+            { subject: "Tiếng Anh", text: "Choose the correct sentence:", options: ["A. I go to school every day.", "B. I goes to school every day.", "C. I going to school every day.", "D. I gone to school every day."], answer: "A" },
+            
+            { subject: "Lịch Sử", text: "Vị vua đầu tiên của nước Văn Lang là:", options: ["A. Hùng Vương", "B. An Dương Vương", "C. Lý Nam Đế", "D. Đinh Bộ Lĩnh"], answer: "A" },
+            { subject: "Lịch Sử", text: "Trận chiến Bạch Đằng năm 938 do ai lãnh đạo?", options: ["A. Ngô Quyền", "B. Lý Thường Kiệt", "C. Trần Hưng Đạo", "D. Lê Lợi"], answer: "A" },
+            
+            { subject: "Địa Lý", text: "Thủ đô của Việt Nam là:", options: ["A. Hà Nội", "B. TP.HCM", "C. Đà Nẵng", "D. Huế"], answer: "A" },
+            { subject: "Địa Lý", text: "Việt Nam có bao nhiêu tỉnh thành?", options: ["A. 63", "B. 58", "C. 64", "D. 68"], answer: "A" }
+        ];
+
+        const QUESTIONS_GRADE_11 = [
+            { subject: "Toán Học", text: "Tập xác định của hàm số y = tanx là:", options: ["A. ℝ\\{π/2 + kπ}", "B. ℝ", "C. ℝ\\{kπ}", "D. ℝ\\{π + kπ}"], answer: "A" },
+            { subject: "Toán Học", text: "Phương trình sinx = 1 có nghiệm:", options: ["A. x = π/2 + k2π", "B. x = π/2 + kπ", "C. x = π + k2π", "D. x = k2π"], answer: "A" },
+            { subject: "Toán Học", text: "Đạo hàm của hàm số y = x³ là:", options: ["A. 3x²", "B. x²", "C. 3x", "D. x³"], answer: "A" },
+            { subject: "Toán Học", text: "Hàm số y = x² - 4x + 3 có đỉnh tại:", options: ["A. (2, -1)", "B. (1, 0)", "C. (3, 0)", "D. (4, 3)"], answer: "A" },
+            
+            { subject: "Vật Lý", text: "Định luật Coulomb nói về:", options: ["A. Lực tương tác điện tích", "B. Lực hấp dẫn", "C. Lực đàn hồi", "D. Lực ma sát"], answer: "A" },
+            { subject: "Vật Lý", text: "Cường độ dòng điện đo bằng:", options: ["A. Ampe", "B. Volt", "C. Ohm", "D. Watt"], answer: "A" },
+            
+            { subject: "Hóa Học", text: "Ankan có công thức chung:", options: ["A. CₙH₂ₙ₊₂", "B. CₙH₂ₙ", "C. CₙH₂ₙ₋₂", "D. CₙH₂ₙ₋₆"], answer: "A" },
+            { subject: "Hóa Học", text: "Chất nào sau đây là axit?", options: ["A. HCl", "B. NaOH", "C. NaCl", "D. NH₃"], answer: "A" }
+        ];
+
+        const QUESTIONS_GRADE_12 = [
+            { subject: "Toán Học", text: "Nguyên hàm của f(x) = x² là:", options: ["A. x³/3 + C", "B. x³ + C", "C. 2x + C", "D. x²/2 + C"], answer: "A" },
+            { subject: "Toán Học", text: "Tích phân ∫₀¹ (2x + 1) dx bằng:", options: ["A. 2", "B. 1", "C. 3", "D. 0"], answer: "A" },
+            { subject: "Toán Học", text: "Số phức liên hợp của 3 + 4i là:", options: ["A. 3 - 4i", "B. -3 + 4i", "C. -3 - 4i", "D. 4 + 3i"], answer: "A" },
+            
+            { subject: "Vật Lý", text: "Hiện tượng quang điện được giải thích bởi:", options: ["A. Thuyết lượng tử ánh sáng", "B. Thuyết sóng ánh sáng", "C. Thuyết điện từ", "D. Thuyết hạt"], answer: "A" },
+            { subject: "Vật Lý", text: "Hạt nào không mang điện?", options: ["A. Neutron", "B. Proton", "C. Electron", "D. Positron"], answer: "A" }
+        ];
+
+        // KHỞI TẠO BIẾN TOÀN CỤC
+        let availableQuestions = [...QUESTIONS_GRADE_10];
+
+        function updateQuestionsByGrade(grade) {
+            if (grade === 10) {
+                availableQuestions = [...QUESTIONS_GRADE_10];
+            } else if (grade === 11) {
+                availableQuestions = [...QUESTIONS_GRADE_11];
+            } else {
+                availableQuestions = [...QUESTIONS_GRADE_12];
+            }
+            
+            if (game) {
+                game.reset();
+            }
+        }
+
+        // ========== GAME ENGINE ==========
+        const FPS_STANDARD = 1000 / 60;
+        const ASSET_PATHS = {
+            background: 'bg.png',
+            ground: 'base.png',
+            pipe: 'pipe-green.png',
+            birdDown: 'bluebird-downflap.png',
+            birdMid: 'bluebird-midflap.png',
+            birdUp: 'bluebird-upflap.png',
+            sfxWing: 'sfx_wing.wav',
+            sfxPoint: 'sfx_point.wav', 
+            sfxHit: 'sfx_hit.wav',
+            sfxDie: 'sfx_die.wav',
+            sfxSwoosh: 'sfx_swooshing.wav', 
+        };
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width, H = canvas.height;
+        const JUMP_VELOCITY_BASE = -5, GRAVITY = 0.2;
+        let BASE_SPEED = 1.2;
+        const PIPE_WIDTH = 52, BASE_HEIGHT = 112;
+        let PIPE_GAP = 130;
+
+        let gameState = 'ready', game, assets = {};
+
+        function loadAssets(cb) {
+            let loaded = 0, total = Object.keys(ASSET_PATHS).length;
+            for (let k in ASSET_PATHS) {
+                if (k.startsWith('sfx')) {
+                    const a = new Audio(ASSET_PATHS[k]);
+                    a.oncanplaythrough = () => { assets[k] = a; loaded++; if (loaded === total) cb(); };
+                    a.onerror = () => { loaded++; if (loaded === total) cb(); };
+                } else {
+                    const img = new Image();
+                    img.onload = () => { assets[k] = img; loaded++; if (loaded === total) cb(); };
+                    img.onerror = () => { loaded++; if (loaded === total) cb(); };
+                    img.src = ASSET_PATHS[k];
+                }
+            }
+        }
+
+        function playSound(k) { 
+            if (assets[k] && settings.soundEnabled) { 
+                assets[k].currentTime = 0; 
+                assets[k].volume = settings.volume;
+                assets[k].play().catch(e => {}); 
+            } 
+        }
+
+        class Bird {
+            constructor() { 
+                this.x = 50; 
+                this.y = H / 2 - 12; 
+                this.width = 34; 
+                this.height = 24; 
+                this.velocity = 0; 
+                this.frame = 0; 
+                this.frameCounter = 0; 
+                this.rotation = 0; 
+            }
+            update(df, grav = 1) {
+                if (isPaused) return;
+                this.velocity += GRAVITY * grav * df;
+                this.y += this.velocity * df;
+                this.rotation = Math.min(Math.PI / 4, this.velocity * 0.1);
+                this.frameCounter++;
+                if (this.frameCounter % 5 === 0) this.frame = (this.frame + 1) % 4;
+            }
+            draw() {
+                ctx.save();
+                ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
+                ctx.rotate(this.rotation);
+                
+                const imgs = [assets.birdMid, assets.birdUp, assets.birdMid, assets.birdDown];
+                if (imgs[this.frame] && assets.birdMid) {
+                    ctx.drawImage(imgs[this.frame], -this.width/2, -this.height/2, this.width, this.height);
+                } else {
+                    const birdColors = settings.birdColors[settings.currentBirdColor];
+                    const gradient = ctx.createLinearGradient(-this.width/2, -this.height/2, this.width, this.height);
+                    gradient.addColorStop(0, birdColors[0]);
+                    gradient.addColorStop(1, birdColors[1]);
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
+                }
+                
+                ctx.restore();
+            }
+            jump() { 
+                this.velocity = JUMP_VELOCITY_BASE; 
+                playSound('sfxWing'); 
+            }
+        }
+
+        class Pipe {
+            constructor(x, h) { this.x = x; this.height = h; this.passed = false; }
+            update(df) { if (!isPaused) this.x -= BASE_SPEED * df * settings.gameSpeed; }
+            draw() {
+                if (!assets.pipe) return;
+                ctx.drawImage(assets.pipe, this.x, 0, PIPE_WIDTH, this.height);
+                ctx.save();
+                ctx.translate(this.x + PIPE_WIDTH/2, this.height + PIPE_GAP + (H - BASE_HEIGHT - (this.height + PIPE_GAP))/2);
+                ctx.scale(1, -1);
+                ctx.drawImage(assets.pipe, -PIPE_WIDTH/2, -(H - BASE_HEIGHT - (this.height + PIPE_GAP))/2, PIPE_WIDTH, H - BASE_HEIGHT - (this.height + PIPE_GAP));
+                ctx.restore();
+            }
+        }
+
+        class FlappyGame {
+            constructor() { this.reset(); this.bestScore = 0; }
+            reset() {
+                this.bird = new Bird(); 
+                this.pipes = []; 
+                this.score = 0;
+                this.pipeTimer = 0; 
+                this.baseX = 0; 
+                this.hints = 0;
+                this.nextHintScore = 10; 
+                this.pipesSinceLastQuestion = 0;
+                this.currentQuestion = null; 
+                this.originalQuestions = [...availableQuestions];
+                this.remainingQuestions = [...availableQuestions];
+                this.answeredQuestionsCount = 0;
+                this.isLastQuestionAnswered = false;
+                this.winDelayTimer = 0;
+                gameState = 'ready';
+                this.hidePauseOverlay();
+                applyDifficulty();
+            }
+            start() { gameState = 'play'; }
+            update(df) {
+                if (isPaused) return;
+                this.baseX = (this.baseX - BASE_SPEED * df * settings.gameSpeed) % W;
+                
+                if (this.isLastQuestionAnswered) {
+                    this.winDelayTimer += df;
+                    if (this.winDelayTimer >= 60) {
+                        this.winGame();
+                        this.isLastQuestionAnswered = false;
+                        this.winDelayTimer = 0;
+                    }
+                }
+                
+                if (gameState === 'play') {
+                    this.bird.update(df);
+                    this.pipeTimer += BASE_SPEED * df * settings.gameSpeed;
+                    if (this.pipeTimer > W * 0.8) { 
+                        this.generatePipe(); 
+                        this.pipeTimer = 0; 
+                    }
+                    this.pipes.forEach((p, i) => {
+                        p.update(df);
+                        if (p.x + PIPE_WIDTH < 0) this.pipes.splice(i, 1);
+                        if (!p.passed && this.bird.x > p.x + PIPE_WIDTH/2) {
+                            p.passed = true; 
+                            this.score++; 
+                            playSound('sfxPoint');
+                            if (this.score >= this.nextHintScore) { 
+                                this.hints++; 
+                                this.nextHintScore += 10; 
+                                const t = texts[settings.language];
+                                this.showEffect(W/2, H/2, t.hint === "Hint" ? "+1 HINT" : "+1 GỢI Ý", "yellow"); 
+                            }
+                        }
+                    });
+                    this.checkCollision();
+                } else if (gameState === 'over') {
+                    this.bird.update(df, 1.5);
+                    if (this.bird.y + this.bird.height >= H - BASE_HEIGHT) { 
+                        this.bird.y = H - BASE_HEIGHT - this.bird.height; 
+                        this.bird.velocity = 0; 
+                    }
+                }
+            }
+            generatePipe() {
+                const h = Math.floor(Math.random() * (H - BASE_HEIGHT - PIPE_GAP - 100)) + 50;
+                this.pipes.push(new Pipe(W, h));
+                this.pipesSinceLastQuestion++;
+                if (this.pipesSinceLastQuestion >= 5 && Math.random() < 0.5 && this.remainingQuestions.length > 0) {
+                    this.showRandomQuestion(); 
+                    this.pipesSinceLastQuestion = 0;
+                }
+            }
+            checkCollision() {
+                if (this.bird.y < 0 || this.bird.y + this.bird.height > H - BASE_HEIGHT) return this.end();
+                for (let p of this.pipes) {
+                    if (this.bird.x + this.bird.width > p.x && this.bird.x < p.x + PIPE_WIDTH) {
+                        if (this.bird.y < p.height || this.bird.y + this.bird.height > p.height + PIPE_GAP) return this.end();
+                    }
+                }
+            }
+            end() { 
+                if (gameState !== 'over') { 
+                    gameState = 'over'; 
+                    playSound('sfxHit'); 
+                    if (this.score > this.bestScore) this.bestScore = this.score; 
+                    
+                    updateGameStats();
+                } 
+            }
+            showRandomQuestion() {
+                gameState = 'question';
+                const idx = Math.floor(Math.random() * this.remainingQuestions.length);
+                const q = this.remainingQuestions.splice(idx, 1)[0];
+                
+                let correctAnswer = q.answer || 'A';
+                if (!['A', 'B', 'C', 'D'].includes(correctAnswer)) {
+                    correctAnswer = 'A';
+                }
+                
+                this.currentQuestion = { 
+                    ...q, 
+                    answer: correctAnswer,
+                    optionsStatus: q.options.map(o => ({text: o, disabled: false})), 
+                    isAnswered: false 
+                };
+                this.answeredQuestionsCount++;
+                this.renderModal();
+            }
+            renderModal() {
+                const q = this.currentQuestion;
+                document.getElementById('questionSubject').textContent = q.subject;
+                document.getElementById('questionText').textContent = q.text;
+                const container = document.getElementById('answersContainer');
+                container.innerHTML = '';
+                
+                q.optionsStatus.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.textContent = opt.text;
+                    btn.className = `answer-button w-full text-left py-2 px-3 rounded-lg font-medium bg-gradient-to-r from-indigo-500 to-purple-600 text-white ${opt.disabled ? 'disabled' : ''}`;
+                    btn.onclick = () => this.checkAnswer(opt.text.charAt(0));
+                    btn.disabled = opt.disabled;
+                    container.appendChild(btn);
+                });
+                
+                document.getElementById('hintCountText').textContent = this.hints;
+                document.getElementById('questionModal').style.display = 'flex';
+            }
+            useHint() {
+                if (this.hints <= 0 || this.currentQuestion.isAnswered) return;
+                
+                const wrong = this.currentQuestion.optionsStatus.filter(o => o.text.charAt(0) !== this.currentQuestion.answer && !o.disabled);
+                
+                if (wrong.length >= 2) {
+                    for (let i = 0; i < 2; i++) {
+                        const randomIndex = Math.floor(Math.random() * wrong.length);
+                        wrong[randomIndex].disabled = true;
+                        wrong.splice(randomIndex, 1);
+                    }
+                } else if (wrong.length === 1) {
+                    wrong[0].disabled = true;
+                }
+                
+                this.hints--;
+                this.renderModal();
+                const t = texts[settings.language];
+                this.showEffect(W/2, H/2, t.hint === "Hint" ? "-2 WRONG ANSWERS" : "-2 ĐÁP ÁN SAI", "#fbbf24");
+            }
+            checkAnswer(key) {
+                this.currentQuestion.isAnswered = true;
+                const correct = key === this.currentQuestion.answer;
+                const msg = document.getElementById('feedbackMessage');
+                const t = texts[settings.language];
+                
+                if (correct) {
+                    msg.textContent = t.correct; 
+                    msg.className = "mt-2 text-center text-green-600 font-bold";
+                    this.score += 5; 
+                    this.pipes.splice(0, 2);
+                    
+                    if (auth.isLoggedIn) {
+                        auth.updateStats({
+                            questionsAnswered: 1,
+                            correctAnswers: 1
+                        });
+                    }
+                    
+                    if (this.remainingQuestions.length === 0) {
+                        this.isLastQuestionAnswered = true;
+                        this.winDelayTimer = 0;
+                        
+                        setTimeout(() => { 
+                            document.getElementById('questionModal').style.display = 'none'; 
+                            gameState = 'play';
+                            this.showEffect(W/2, H/2, t.lastQuestion, "#FFD700");
+                        }, 1000);
+                    } else {
+                        setTimeout(() => { 
+                            document.getElementById('questionModal').style.display = 'none'; 
+                            gameState = 'play'; 
+                        }, 1000);
+                    }
+                } else {
+                    msg.textContent = t.wrong; 
+                    msg.className = "mt-2 text-center text-red-600 font-bold";
+                    
+                    if (auth.isLoggedIn) {
+                        auth.updateStats({
+                            questionsAnswered: 1
+                        });
+                    }
+                    
+                    setTimeout(() => { 
+                        document.getElementById('questionModal').style.display = 'none'; 
+                        this.end(); 
+                    }, 1000);
+                }
+            }
+            winGame() {
+                gameState = 'win';
+                this.bird.velocity = 0;
+                showWinModal();
+            }
+            showEffect(x, y, txt, col) {
+                const e = document.createElement('div'); 
+                e.textContent = txt; 
+                e.className = 'score-plus-effect';
+                e.style.left = x + 'px'; 
+                e.style.top = y + 'px'; 
+                e.style.color = col;
+                document.getElementById('effect-area').appendChild(e);
+                setTimeout(() => e.remove(), 1500);
+            }
+            showPauseOverlay() {
+                const overlay = document.createElement('div');
+                overlay.className = 'pause-overlay';
+                overlay.id = 'pauseOverlay';
+                
+                const text = document.createElement('div');
+                text.className = 'pause-text';
+                const t = texts[settings.language];
+                text.textContent = t.pause;
+                overlay.appendChild(text);
+                
+                const continueButton = document.createElement('button');
+                continueButton.className = 'pause-button';
+                continueButton.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                        <path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd" />
+                    </svg>
+                    ${t.continue}
+                `;
+                continueButton.onclick = togglePause;
+                overlay.appendChild(continueButton);
+                
+                canvas.parentElement.appendChild(overlay);
+            }
+            hidePauseOverlay() {
+                const overlay = document.getElementById('pauseOverlay');
+                if (overlay) overlay.remove();
+            }
+            draw() {
+                if (assets.background && assets.background.complete) {
+                    ctx.drawImage(assets.background, 0, 0, W, H);
+                } else {
+                    const bgColors = settings.bgColors[settings.currentBgColor];
+                    const gradient = ctx.createLinearGradient(0, 0, W, H);
+                    gradient.addColorStop(0, bgColors[0]);
+                    gradient.addColorStop(1, bgColors[1]);
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, W, H);
+                }
+                
+                this.pipes.forEach(p => p.draw());
+                
+                if (assets.ground && assets.ground.complete) {
+                    for (let x = this.baseX; x < W + assets.ground.width; x += assets.ground.width) {
+                        ctx.drawImage(assets.ground, x, H - BASE_HEIGHT, assets.ground.width, BASE_HEIGHT);
+                    }
+                }
+                
+                this.bird.draw();
+                
+                ctx.fillStyle = 'white'; 
+                ctx.font = '30px Inter'; 
+                ctx.textAlign = 'center';
+                ctx.fillText(this.score, W/2, 50);
+                
+                const t = texts[settings.language];
+                
+                if (gameState === 'ready') { 
+                    ctx.fillText(t.tapToFly, W/2, H/2); 
+                }
+                if (gameState === 'over') {
+                    ctx.fillStyle = 'rgba(0,0,0,0.5)'; 
+                    ctx.fillRect(0,0,W,H);
+                    ctx.fillStyle = 'white'; 
+                    ctx.fillText(t.gameOver, W/2, H/2 - 50);
+                    ctx.font = '20px Inter'; 
+                    ctx.fillText(`${t.score}: ${this.score} - ${t.best}: ${this.bestScore}`, W/2, H/2);
+                    ctx.fillText(t.tapToPlayAgain, W/2, H/2 + 50);
+                }
+                if (gameState === 'win') {
+                    ctx.fillStyle = 'rgba(0,0,0,0.7)'; 
+                    ctx.fillRect(0,0,W,H);
+                    ctx.fillStyle = '#FFD700'; 
+                    ctx.font = 'bold 40px Inter'; 
+                    ctx.fillText(t.victory, W/2, H/2 - 30);
+                    ctx.font = '20px Inter'; 
+                    ctx.fillStyle = 'white';
+                    ctx.fillText(`${t.completedQuestions.replace('câu hỏi', 'questions')} ${this.originalQuestions.length} ${t.completedQuestions.includes('câu hỏi') ? 'câu hỏi' : 'questions'}!`, W/2, H/2 + 30);
+                }
+            }
+        }
+
+        function handleJump(e) {
+            if (e) e.preventDefault();
+            if (isPaused) return;
+            if (!settings.touchControl && e.type === 'mousedown') return;
+            if (gameState === 'ready') game.start();
+            if (gameState === 'play') game.bird.jump();
+            if (gameState === 'over') game.reset();
+        }
+
+        let lastTime = 0;
+        function loop(ts) {
+            let df = (ts - (lastTime || ts)) / FPS_STANDARD;
+            lastTime = ts;
+            if (gameState !== 'question') { 
+                ctx.clearRect(0,0,W,H); 
+                game.update(df); 
+                game.draw(); 
+            }
+            requestAnimationFrame(loop);
+        }
+
+        window.onload = () => {
+            loadAssets(() => { 
+                game = new FlappyGame(); 
+                loop(); 
+                loadSettings();
+                initAuth();
+            });
+        };
+        
+        if (settings.touchControl) {
+            canvas.addEventListener('mousedown', handleJump);
+            canvas.addEventListener('touchstart', handleJump);
+        }
+        
+        window.addEventListener('keydown', e => { 
+            if (e.code === 'Space') handleJump(e);
+            if (e.code === 'Escape') togglePause();
+        });
+    </script>
+</body>
+</html>
